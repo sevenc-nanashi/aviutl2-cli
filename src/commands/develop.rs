@@ -4,7 +4,7 @@ use std::process::Command;
 
 use crate::config::load_config;
 use crate::config::{Config, PlacementMethod};
-use crate::util::{create_symlink, find_aviutl2_data_dir};
+use crate::util::{copy_to_destination, find_aviutl2_data_dir};
 
 pub struct ResolvedArtifact {
     pub source: PathBuf,
@@ -28,20 +28,10 @@ pub fn run(profile: Option<String>, skip_start: bool) -> Result<()> {
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
     for artifact in artifacts {
         run_build_commands(&artifact.build_commands)?;
-        if !artifact.source.exists() {
-            log::warn!("source が見つかりません: {}", artifact.source.display());
-            continue;
-        }
         let dest = data_dir.join(&artifact.destination);
         match artifact.placement_method {
-            PlacementMethod::Symlink => create_symlink(&artifact.source, &dest, false)?,
-            PlacementMethod::Copy => {
-                log::warn!(
-                    "develop では copy を使わないため symlink を作成します: {}",
-                    dest.display()
-                );
-                create_symlink(&artifact.source, &dest, false)?;
-            }
+            PlacementMethod::Symlink => {}
+            PlacementMethod::Copy => copy_to_destination(&artifact.source, &dest, true)?,
         }
     }
     log::info!("成果物を配置しました");
