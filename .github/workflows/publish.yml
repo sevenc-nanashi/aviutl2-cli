@@ -52,14 +52,17 @@ jobs:
 
       - name: Prepare release
         shell: bash
+        id: prepare
         run: |
           cargo build -r
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             mkdir -p ${{ runner.temp }}/au2
             cp target/release/au2.exe ${{ runner.temp }}/au2/au2${{ matrix.prefix }}.exe
+            echo "au2_path=${{ runner.temp }}/au2/au2${{ matrix.prefix }}.exe" >> $GITHUB_OUTPUT
           else
             mkdir -p ${{ runner.temp }}/au2
             cp target/release/au2 ${{ runner.temp }}/au2/au2${{ matrix.prefix }}
+            echo "au2_path=${{ runner.temp }}/au2/au2${{ matrix.prefix }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Create Release
@@ -67,4 +70,4 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.version }}
           files: |
-            ${{ runner.temp }}/au2/*
+            ${{ steps.prepare.outputs.au2_path }}
