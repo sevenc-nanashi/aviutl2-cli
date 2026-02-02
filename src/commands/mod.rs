@@ -18,7 +18,10 @@ pub fn run(command: Commands) -> Result<()> {
         }
         Commands::PrepareAviUtl2 => prepare::aviutl2(),
         Commands::PrepareArtifacts { force, profile } => prepare::artifacts(force, profile),
-        Commands::Develop { profile } => develop::run(profile),
+        Commands::Develop {
+            profile,
+            skip_start,
+        } => develop::run(profile, skip_start),
         Commands::PrepareSchema => schema::run(),
         Commands::Release {
             profile,

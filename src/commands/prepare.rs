@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use fs_err as fs;
+use fs_err::{self as fs, PathExt};
 use fs_err::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
@@ -48,8 +48,8 @@ pub fn artifacts(force: bool, profile: Option<String>) -> Result<()> {
         }
         let dest = data_dir.join(&artifact.destination);
         match artifact.placement_method {
-            PlacementMethod::Symlink => create_symlink(&source, &dest, force)?,
-            PlacementMethod::Copy => copy_to_destination(&source, &dest, force)?,
+            PlacementMethod::Symlink => create_symlink(&source.fs_err_canonicalize()?, &dest, force)?,
+            PlacementMethod::Copy => copy_to_destination(&source.fs_err_canonicalize()?, &dest, force)?,
         }
     }
     log::info!("成果物のシンボリックリンクを作成しました");
