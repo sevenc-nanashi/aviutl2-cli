@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use fs_err::{self as fs, PathExt};
+use fs_err as fs;
 use fs_err::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
@@ -42,14 +42,22 @@ pub fn artifacts(force: bool, profile: Option<String>) -> Result<()> {
 
     for artifact in artifacts {
         let source = artifact.source;
-        if !source.exists() {
-            log::warn!("source が見つかりません: {}", source.display());
-            continue;
-        }
         let dest = data_dir.join(&artifact.destination);
         match artifact.placement_method {
-            PlacementMethod::Symlink => create_symlink(&source.fs_err_canonicalize()?, &dest, force)?,
-            PlacementMethod::Copy => copy_to_destination(&source.fs_err_canonicalize()?, &dest, force)?,
+            PlacementMethod::Symlink => {
+                let relative_source = format!("./{}", source.display());
+                let to_source_relative =
+                    pathdiff::diff_paths(&relative_source, dest.parent().unwrap())
+                        .context("相対パスの計算に失敗しました")?;
+                create_symlink(&to_source_relative, &dest, force)?
+            }
+            PlacementMethod::Copy => {
+                if !source.exists() {
+                    log::warn!("source が見つかりません: {}", source.display());
+                    continue;
+                }
+                copy_to_destination(&source, &dest, force)?
+            }
         }
     }
     log::info!("成果物のシンボリックリンクを作成しました");
