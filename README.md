@@ -88,6 +88,7 @@ AviUtl2本体をダウンロードし、開発用ディレクトリに展開し�
 ### `au2 release`
 
 成果物をビルドし、リリース用のパッケージを作成します。
+`--set-version` を指定すると `aviutl2.toml` の `project.version` を上書きできます。
 
 ## ライセンス
 

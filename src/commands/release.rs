@@ -5,8 +5,11 @@ use std::path::PathBuf;
 use crate::config::load_config;
 use crate::util::{copy_to_destination, create_zip, fill_template};
 
-pub fn run(profile: Option<String>) -> Result<()> {
-    let config = load_config()?;
+pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {
+    let mut config = load_config()?;
+    if let Some(version) = set_version {
+        config.project.version = version;
+    }
     let release = config.release.as_ref().context("release 設定が必要です")?;
     let profile = profile
         .or_else(|| release.profile.clone())

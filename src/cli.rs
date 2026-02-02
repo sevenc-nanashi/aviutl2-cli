@@ -58,5 +58,9 @@ pub enum Commands {
         /// 使うプロファイル名（デフォルトは release）
         #[arg(short = 'p', long = "profile")]
         profile: Option<String>,
+
+        /// 使うバージョン（aviutl2.toml の project.version を上書き）
+        #[arg(long = "set-version")]
+        set_version: Option<String>,
     },
 }

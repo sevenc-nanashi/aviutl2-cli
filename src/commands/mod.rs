@@ -20,6 +20,9 @@ pub fn run(command: Commands) -> Result<()> {
         Commands::PrepareArtifacts { force, profile } => prepare::artifacts(force, profile),
         Commands::Develop { profile } => develop::run(profile),
         Commands::PrepareSchema => schema::run(),
-        Commands::Release { profile } => release::run(profile),
+        Commands::Release {
+            profile,
+            set_version,
+        } => release::run(profile, set_version),
     }
 }
