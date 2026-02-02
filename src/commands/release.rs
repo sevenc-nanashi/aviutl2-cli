@@ -3,7 +3,7 @@ use fs_err as fs;
 use std::path::PathBuf;
 
 use crate::config::load_config;
-use crate::util::{copy_to_destination, create_zip};
+use crate::util::{copy_to_destination, create_zip, fill_template};
 
 pub fn run(profile: Option<String>) -> Result<()> {
     let config = load_config()?;
@@ -40,6 +40,7 @@ pub fn run(profile: Option<String>) -> Result<()> {
                 template_path.display()
             )
         })?;
+        let content = fill_template(&content, &config.project);
         let content = normalize_to_crlf(&content);
         fs::write(&target, content).with_context(|| {
             format!("package.txt の書き込みに失敗しました: {}", target.display())
@@ -50,9 +51,7 @@ pub fn run(profile: Option<String>) -> Result<()> {
         .zip_name
         .clone()
         .unwrap_or_else(|| "{name}-v{version}".to_string());
-    let zip_name = zip_base
-        .replace("{name}", &config.project.name)
-        .replace("{version}", &config.project.version);
+    let zip_name = fill_template(&zip_base, &config.project);
     let zip_file_name = if zip_name.ends_with(".au2pkg.zip") {
         zip_name
     } else {

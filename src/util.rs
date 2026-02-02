@@ -216,3 +216,9 @@ fn path_to_slash(path: &Path) -> String {
     }
     parts.join("/")
 }
+
+pub fn fill_template(template: &str, project: &crate::config::Project) -> String {
+    template
+        .replace("{name}", &project.name)
+        .replace("{version}", &project.version)
+}
