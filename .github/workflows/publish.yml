@@ -65,9 +65,8 @@ jobs:
             echo "au2_path=${{ runner.temp }}/au2/au2${{ matrix.prefix }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.event.inputs.version }}
-          files: |
-            ${{ steps.prepare.outputs.au2_path }}
+      - name: Release
+        shell: bash
+        run: |
+          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} gh release upload ${{ github.event.inputs.version }} ${{ steps.prepare.outputs.au2_path }}
+        
