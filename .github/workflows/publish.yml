@@ -9,7 +9,14 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            prefix: -windows
+          - os: ubuntu-latest
+            prefix: -linux
+    runs-on: ${{ matrix.os }}
     environment: publish
     permissions:
       contents: write
@@ -42,29 +49,22 @@ jobs:
       - name: Update Cargo.toml
         run: |
           cargo set-version ${{ github.event.inputs.version }}
-          cargo update --workspace
 
       - name: Prepare release
         shell: bash
         run: |
           cargo build -r
-
-      - name: Commit version change
-        run: |
-          git config --local user.name "GitHub Actions"
-          git config --local user.email "actions@github.com"
-          git add Cargo.toml Cargo.lock
-          git commit -m "release: v${{ github.event.inputs.version }}"
-          git tag ${{ github.event.inputs.version }}
-
-      - name: Push Tag
-        run: |
-          git push
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            mkdir -p ${{ runner.temp }}/au2
+            cp target/release/au2.exe ${{ runner.temp }}/au2/au2${{ matrix.prefix }}.exe
+          else
+            mkdir -p ${{ runner.temp }}/au2
+            cp target/release/au2 ${{ runner.temp }}/au2/au2${{ matrix.prefix }}
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.version }}
           files: |
-            ./target/release/au2.exe
-            ./target/release/au2
+            ${{ runner.temp }}/au2/*
