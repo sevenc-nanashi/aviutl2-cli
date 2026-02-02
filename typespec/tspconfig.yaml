@@ -1,0 +1,8 @@
+emit:
+  - "@typespec/json-schema"
+options:
+  "@typespec/json-schema":
+    emitter-output-dir: "{cwd}/../schema"
+    file-type: "json"
+    bundleId: "aviutl2.config.schema.json"
+    emitAllModels: false

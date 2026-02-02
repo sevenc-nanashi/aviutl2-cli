@@ -21,6 +21,8 @@ source = "i18n/english.aul2"
 destination = "Language/English.my_plugin.aul2"
 # ビルドコマンド
 build = "ruby ./scripts/build_aul2.rb"
+# 開発時の配置方法（symlink / copy、デフォルトはsymlink）
+placement_method = "symlink"
 
 [artifacts.my_plugin_aux2]
 destination = "Plugin/my_plugin.aux2"

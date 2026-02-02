@@ -1,0 +1,9 @@
+{
+  "name": "aviutl2-cli-typespec",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@typespec/compiler": "latest",
+    "@typespec/json-schema": "latest"
+  }
+}
