@@ -1,0 +1,9 @@
+[package]
+name = "aviutl2-cli"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "au2"
+
+[dependencies]
