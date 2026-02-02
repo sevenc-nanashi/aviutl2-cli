@@ -4,8 +4,7 @@ use clap::Subcommand;
 #[command(
     name = "au2",
     version,
-    about = "AviUtl2 プラグイン/スクリプト開発用 CLI",
-    long_about = "AviUtl2 の開発環境準備・成果物配置・リリース作成を行う CLI です。"
+    about = "AviUtl2 CLI",
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -51,6 +50,10 @@ pub enum Commands {
         /// 使うプロファイル名（デフォルトは debug）
         #[arg(short = 'p', long = "profile")]
         profile: Option<String>,
+
+        /// AviUtl2を起動しない
+        #[arg(short = 's', long = "skip-start")]
+        skip_start: bool,
     },
 
     /// リリース用のパッケージを作成します

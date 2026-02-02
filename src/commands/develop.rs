@@ -13,7 +13,7 @@ pub struct ResolvedArtifact {
     pub placement_method: PlacementMethod,
 }
 
-pub fn run(profile: Option<String>) -> Result<()> {
+pub fn run(profile: Option<String>, skip_start: bool) -> Result<()> {
     let config = load_config()?;
     let dev = config
         .development
@@ -45,6 +45,18 @@ pub fn run(profile: Option<String>) -> Result<()> {
         }
     }
     log::info!("成果物を配置しました");
+
+    if !skip_start {
+        let aviutl_exe = data_dir.parent().unwrap_or(&data_dir).join("aviutl2.exe");
+        if aviutl_exe.exists() {
+            log::info!("AviUtl2 を起動します: {}", aviutl_exe.display());
+            Command::new(aviutl_exe)
+                .spawn()
+                .with_context(|| "AviUtl2 の起動に失敗しました")?;
+        } else {
+            log::warn!("AviUtl2.exe が見つかりません: {}", aviutl_exe.display());
+        }
+    }
     Ok(())
 }
 
