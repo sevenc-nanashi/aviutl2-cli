@@ -41,5 +41,13 @@ pub fn run() -> Result<()> {
         INIT_TEMPLATE.replace("{{project_name}}", project_name),
     )?;
     log::info!("aviutl2.toml を作成しました");
+
+    let gitignore_path = PathBuf::from(".gitignore");
+    if gitignore_path.exists() {
+        let mut content = fs::read_to_string(&gitignore_path)?;
+        content.push_str("\n# AviUtl2 CLI\n/development\n/release\n");
+        fs::write(&gitignore_path, content)?;
+        log::info!(".gitignore を更新しました");
+    }
     Ok(())
 }
