@@ -67,8 +67,11 @@ include = ["my_plugin_aul2", "my_plugin_aux2"]
 
 ### `au2 prepare`
 
-AviUtl2の開発環境をセットアップします。
-`au2 prepare:aviutl2 && au2 prepare:artifacts`に相当します。
+AviUtl2の開発環境をセットアップします（`prepare:schema -> prepare:aviutl2 -> prepare:artifacts`）。
+
+### `au2 prepare:schema`
+
+設定ファイルのJSON Schemaを開発用ディレクトリに出力します。
 
 ### `au2 prepare:aviutl2`
 
@@ -78,10 +81,14 @@ AviUtl2本体をダウンロードし、開発用ディレクトリに展開し�
 
 開発用ディレクトリに成果物へのシンボリックリンクを作成します。
 
-### `au2 dev`
+### `au2 develop` / `au2 dev`
 
-成果物をビルドし、AviUtl2に配置します。
+開発用の成果物をビルドし、AviUtl2に配置します。
 
 ### `au2 release`
 
 成果物をビルドし、リリース用のパッケージを作成します。
+
+## ライセンス
+
+MIT License で公開しています。
