@@ -58,7 +58,7 @@ jobs:
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             mkdir -p ${{ runner.temp }}/au2
             cp target/release/au2.exe ${{ runner.temp }}/au2/au2${{ matrix.prefix }}.exe
-            echo "au2_path=${{ runner.temp }}/au2/au2${{ matrix.prefix }}.exe" >> $GITHUB_OUTPUT
+            echo "au2_path=${{ runner.temp }}/au2/au2${{ matrix.prefix }}.exe" | sed 's!\\!/!g' >> $GITHUB_OUTPUT
           else
             mkdir -p ${{ runner.temp }}/au2
             cp target/release/au2 ${{ runner.temp }}/au2/au2${{ matrix.prefix }}
