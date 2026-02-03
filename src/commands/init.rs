@@ -9,15 +9,18 @@ name = "{{project_name}}"
 version = "0.1.0"
 
 [artifacts.my_plugin_aux2]
+enabled = true
 destination = "Plugin/my_plugin.aux2"
 
 [artifacts.my_plugin_aux2.profiles.debug]
 build = "cargo build"
 source = "target/debug/my_plugin_aux2.dll"
+enabled = true
 
 [artifacts.my_plugin_aux2.profiles.release]
 build = ["cargo build --release"]
 source = "target/release/my_plugin_aux2.dll"
+enabled = true
 
 [development]
 aviutl2_version = "2.00beta31"

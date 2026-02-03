@@ -20,6 +20,7 @@ pub struct Project {
 
 #[derive(Deserialize)]
 pub struct Artifact {
+    pub enabled: Option<bool>,
     pub source: Option<String>,
     pub destination: String,
     pub build: Option<BuildCommand>,
@@ -29,6 +30,7 @@ pub struct Artifact {
 
 #[derive(Deserialize)]
 pub struct ArtifactProfile {
+    pub enabled: Option<bool>,
     pub source: Option<String>,
     pub build: Option<BuildCommand>,
 }

@@ -16,6 +16,7 @@ model Project {
 }
 
 model Artifact {
+  enabled?: boolean;
   source?: string;
   destination: string;
   build?: BuildCommand;
@@ -24,6 +25,7 @@ model Artifact {
 }
 
 model ArtifactProfile {
+  enabled?: boolean;
   source?: string;
   build?: BuildCommand;
 }

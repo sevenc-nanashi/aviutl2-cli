@@ -85,6 +85,13 @@ pub fn resolve_artifacts(
                 .as_ref()
                 .and_then(|profiles| profiles.get(p))
         });
+        let enabled = profile_data
+            .and_then(|p| p.enabled)
+            .or(artifact.enabled)
+            .unwrap_or(true);
+        if !enabled {
+            continue;
+        }
         let source = profile_data
             .and_then(|p| p.source.clone())
             .or_else(|| artifact.source.clone())

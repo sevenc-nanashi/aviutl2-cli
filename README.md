@@ -19,6 +19,8 @@ version = "0.1.0"
 source = "i18n/english.aul2"
 # http/https の URL も指定できます
 # source = "https://example.com/my_plugin.aul2"
+# 成果物の有効/無効（デフォルトは true）
+enabled = true
 # AviUtlのプラグインディレクトリ内での配置先パス
 destination = "Language/English.my_plugin.aul2"
 # ビルドコマンド
@@ -38,6 +40,7 @@ source = "target/debug/my_plugin_aux2.dll"
 # buildコマンドは複数も指定可能（前から順に実行される）
 build = ["echo Building release...", "cargo build --release"]
 source = "target/release/my_plugin_aux2.dll"
+enabled = true
 
 # 開発時の設定
 [development]
