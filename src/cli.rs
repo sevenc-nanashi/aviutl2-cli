@@ -18,6 +18,10 @@ pub enum Commands {
         /// 既存ファイルがある場合に上書きします
         #[arg(long)]
         force: bool,
+
+        /// HTTP の成果物キャッシュを再取得します
+        #[arg(long)]
+        refresh: bool,
     },
 
     /// 設定ファイルの JSON Schema を開発用ディレクトリに出力します
@@ -38,6 +42,10 @@ pub enum Commands {
         /// 使うプロファイル名（デフォルトは debug）
         #[arg(short = 'p', long = "profile")]
         profile: Option<String>,
+
+        /// HTTP の成果物キャッシュを再取得します
+        #[arg(long)]
+        refresh: bool,
     },
 
     /// 開発用の成果物をビルドし、AviUtl2 に配置します
@@ -50,6 +58,10 @@ pub enum Commands {
         /// AviUtl2を起動しない
         #[arg(short = 's', long = "skip-start")]
         skip_start: bool,
+
+        /// HTTP の成果物キャッシュを再取得します
+        #[arg(long)]
+        refresh: bool,
     },
 
     /// リリース用のパッケージを作成します

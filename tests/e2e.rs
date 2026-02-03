@@ -31,7 +31,7 @@ fn e2e_init_creates_config_and_updates_gitignore() -> Result<(), Box<dyn std::er
     assert!(config.contains("name = \"my_aviutl2_project\""));
 
     let gitignore = fs::read_to_string(&gitignore_path)?;
-    assert!(gitignore.contains("/development"));
+    assert!(gitignore.contains("/.aviutl2-cli"));
     assert!(gitignore.contains("/release"));
 
     Ok(())
@@ -86,7 +86,9 @@ install_dir = "devdir"
         .assert()
         .success();
 
-    let schema_path = project_dir.join("devdir").join("aviutl2.schema.json");
+    let schema_path = project_dir
+        .join(".aviutl2-cli")
+        .join("aviutl2.schema.json");
     assert!(schema_path.exists());
 
     Ok(())

@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, bail};
 use fs_err as fs;
 use fs_err::File;
+use std::hash::{Hash, Hasher};
 use std::io::Read;
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
@@ -224,28 +225,42 @@ pub fn fill_template(template: &str, project: &crate::config::Project) -> String
         .replace("{version}", &project.version)
 }
 
-pub fn resolve_source(source: &str) -> Result<(PathBuf, Option<PathBuf>)> {
-    if is_http_url(source) {
-        let downloaded = download_http_source(source)?;
-        return Ok((downloaded.clone(), Some(downloaded)));
+pub fn development_dir(dev: &crate::config::Development) -> Result<PathBuf> {
+    if let Some(install_dir) = dev.install_dir.as_deref() {
+        return Ok(PathBuf::from(install_dir));
     }
-    Ok((PathBuf::from(source), None))
+    let mut base = cli_dir()?;
+    base.push("development");
+    Ok(base)
+}
+
+pub fn resolve_source(source: &str, refresh: bool) -> Result<(PathBuf, bool)> {
+    if is_http_url(source) {
+        let downloaded = download_http_source(source, refresh)?;
+        return Ok((downloaded, true));
+    }
+    Ok((PathBuf::from(source), false))
 }
 
 fn is_http_url(source: &str) -> bool {
     source.starts_with("http://") || source.starts_with("https://")
 }
 
-fn download_http_source(url: &str) -> Result<PathBuf> {
+fn download_http_source(url: &str, refresh: bool) -> Result<PathBuf> {
     let file_name = filename_from_url(url);
-    let mut temp_dir = std::env::temp_dir();
-    temp_dir.push("aviutl2-cli");
-    fs::create_dir_all(&temp_dir)?;
+    let cache_dir = http_cache_dir()?;
+    fs::create_dir_all(&cache_dir)?;
+    let hash = hash_url(url);
+    let cache_path = cache_dir.join(format!("{hash}_{file_name}"));
+    if cache_path.exists() && !refresh {
+        log::info!("source のキャッシュを使用します: {} -> {}", url, cache_path.display());
+        return Ok(cache_path);
+    }
     let ts = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
-    let mut temp_path = temp_dir.join(format!("{ts}_{file_name}"));
+    let mut temp_path = cache_dir.join(format!("{ts}_{file_name}.partial"));
 
     let agent: ureq::Agent = ureq::Agent::config_builder()
         .max_redirects(5)
@@ -267,16 +282,20 @@ fn download_http_source(url: &str) -> Result<PathBuf> {
     reader.read_to_end(&mut buf)?;
 
     if temp_path.exists() {
-        temp_path = temp_dir.join(format!("{ts}_{}_1", file_name));
+        temp_path = cache_dir.join(format!("{ts}_{}_1.partial", file_name));
     }
     let mut file = File::create(&temp_path)?;
     file.write_all(&buf)?;
+    if cache_path.exists() {
+        remove_path(&cache_path)?;
+    }
+    fs::rename(&temp_path, &cache_path)?;
     log::info!(
         "source をダウンロードしました: {} -> {}",
         url,
-        temp_path.display()
+        cache_path.display()
     );
-    Ok(temp_path)
+    Ok(cache_path)
 }
 
 fn filename_from_url(url: &str) -> String {
@@ -288,4 +307,28 @@ fn filename_from_url(url: &str) -> String {
     } else {
         name.to_string()
     }
+}
+
+pub fn release_stage_dir() -> Result<PathBuf> {
+    let mut base = cli_dir()?;
+    base.push("release-stage");
+    Ok(base)
+}
+
+fn http_cache_dir() -> Result<PathBuf> {
+    let mut base = cli_dir()?;
+    base.push("cache");
+    Ok(base)
+}
+
+fn cli_dir() -> Result<PathBuf> {
+    let mut base = std::env::current_dir().context("カレントディレクトリの取得に失敗しました")?;
+    base.push(".aviutl2-cli");
+    Ok(base)
+}
+
+fn hash_url(url: &str) -> String {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    url.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
 }

@@ -4,38 +4,37 @@ use std::process::Command;
 
 use crate::config::load_config;
 use crate::config::{Config, PlacementMethod};
-use crate::util::{copy_to_destination, find_aviutl2_data_dir, remove_path, resolve_source};
+use crate::util::{copy_to_destination, development_dir, find_aviutl2_data_dir, resolve_source};
 
 pub struct ResolvedArtifact {
     pub source: PathBuf,
-    pub source_temp: Option<PathBuf>,
+    pub is_http: bool,
     pub destination: PathBuf,
     pub build_commands: Vec<String>,
     pub placement_method: PlacementMethod,
 }
 
-pub fn run(profile: Option<String>, skip_start: bool) -> Result<()> {
+pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<()> {
     let config = load_config()?;
     let dev = config
         .development
         .as_ref()
         .context("development 設定が必要です")?;
-    let install_dir = PathBuf::from(dev.install_dir.as_deref().unwrap_or("./development"));
+    let install_dir = development_dir(dev)?;
     let profile = profile
         .as_deref()
         .or(dev.profile.as_deref())
         .unwrap_or("debug");
-    let artifacts = resolve_artifacts(&config, Some(profile), None)?;
+    let artifacts = resolve_artifacts(&config, Some(profile), None, refresh)?;
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
     let mut anything_copied = false;
     for artifact in artifacts {
         run_build_commands(&artifact.build_commands)?;
         let dest = data_dir.join(&artifact.destination);
-        let needs_copy = matches!(artifact.placement_method, PlacementMethod::Copy)
-            || artifact.source_temp.is_some();
+        let needs_copy =
+            matches!(artifact.placement_method, PlacementMethod::Copy) || artifact.is_http;
         if needs_copy {
-            if matches!(artifact.placement_method, PlacementMethod::Symlink)
-                && artifact.source_temp.is_some()
+            if matches!(artifact.placement_method, PlacementMethod::Symlink) && artifact.is_http
             {
                 log::warn!(
                     "source が http/https のためコピーで配置します: {}",
@@ -44,9 +43,6 @@ pub fn run(profile: Option<String>, skip_start: bool) -> Result<()> {
             }
             copy_to_destination(&artifact.source, &dest, true)?;
             anything_copied = true;
-        }
-        if let Some(temp) = &artifact.source_temp {
-            remove_path(temp)?;
         }
     }
     if anything_copied {
@@ -71,6 +67,7 @@ pub fn resolve_artifacts(
     config: &Config,
     profile: Option<&str>,
     include: Option<&[String]>,
+    refresh: bool,
 ) -> Result<Vec<ResolvedArtifact>> {
     let mut resolved = Vec::new();
     for (name, artifact) in &config.artifacts {
@@ -96,7 +93,7 @@ pub fn resolve_artifacts(
             .and_then(|p| p.source.clone())
             .or_else(|| artifact.source.clone())
             .with_context(|| format!("artifacts.{}.source が必要です", name))?;
-        let (source, source_temp) = resolve_source(&source)?;
+        let (source, is_http) = resolve_source(&source, refresh)?;
         let build = profile_data
             .and_then(|p| p.build.clone())
             .or_else(|| artifact.build.clone());
@@ -106,7 +103,7 @@ pub fn resolve_artifacts(
             .unwrap_or(PlacementMethod::Symlink);
         resolved.push(ResolvedArtifact {
             source,
-            source_temp,
+            is_http,
             destination: PathBuf::from(&artifact.destination),
             build_commands,
             placement_method,

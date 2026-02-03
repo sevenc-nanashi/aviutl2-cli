@@ -3,7 +3,7 @@ use fs_err as fs;
 use std::path::PathBuf;
 
 use crate::config::load_config;
-use crate::util::{copy_to_destination, create_zip, fill_template, remove_path};
+use crate::util::{copy_to_destination, create_zip, fill_template, release_stage_dir};
 
 pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {
     let mut config = load_config()?;
@@ -15,11 +15,11 @@ pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {
         .or_else(|| release.profile.clone())
         .unwrap_or_else(|| "release".to_string());
     let include = release.include.as_deref();
-    let artifacts = super::develop::resolve_artifacts(&config, Some(&profile), include)?;
+    let artifacts = super::develop::resolve_artifacts(&config, Some(&profile), include, false)?;
     let output_dir = PathBuf::from(release.output_dir.as_deref().unwrap_or("release"));
     fs::create_dir_all(&output_dir)?;
 
-    let stage_dir = output_dir.join(".stage");
+    let stage_dir = release_stage_dir()?;
     if stage_dir.exists() {
         fs::remove_dir_all(&stage_dir)?;
     }
@@ -32,9 +32,6 @@ pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {
             &stage_dir.join(&artifact.destination),
             true,
         )?;
-        if let Some(temp) = artifact.source_temp {
-            remove_path(&temp)?;
-        }
     }
 
     if let Some(template) = release.package_template.as_ref() {

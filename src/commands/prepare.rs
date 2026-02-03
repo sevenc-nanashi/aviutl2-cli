@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use crate::config::{PlacementMethod, load_config};
 use crate::util::{
-    copy_to_destination, create_symlink, extract_zip, find_aviutl2_data_dir, remove_path,
+    copy_to_destination, create_symlink, development_dir, extract_zip, find_aviutl2_data_dir,
 };
 
 const API_BASE: &str = "https://api.aviutl2.jp";
@@ -17,7 +17,7 @@ pub fn aviutl2() -> Result<()> {
         .development
         .as_ref()
         .context("development 設定が必要です")?;
-    let install_dir = PathBuf::from(dev.install_dir.as_deref().unwrap_or("./development"));
+    let install_dir = development_dir(dev)?;
     fs::create_dir_all(&install_dir)
         .with_context(|| format!("ディレクトリ作成に失敗しました: {}", install_dir.display()))?;
     if let Ok(current_version) = fs::read_to_string(install_dir.join(".aviutl2-version"))
@@ -39,26 +39,25 @@ pub fn aviutl2() -> Result<()> {
     Ok(())
 }
 
-pub fn artifacts(force: bool, profile: Option<String>) -> Result<()> {
+pub fn artifacts(force: bool, profile: Option<String>, refresh: bool) -> Result<()> {
     let config = load_config()?;
     let dev = config
         .development
         .as_ref()
         .context("development 設定が必要です")?;
-    let install_dir = PathBuf::from(dev.install_dir.as_deref().unwrap_or("./development"));
+    let install_dir = development_dir(dev)?;
     let profile = profile
         .as_deref()
         .or(dev.profile.as_deref())
         .unwrap_or("debug");
-    let artifacts = super::develop::resolve_artifacts(&config, Some(profile), None)?;
+    let artifacts = super::develop::resolve_artifacts(&config, Some(profile), None, refresh)?;
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
 
     for artifact in artifacts {
         let source = artifact.source;
-        let source_temp = artifact.source_temp;
         let dest = data_dir.join(&artifact.destination);
         match artifact.placement_method {
-            PlacementMethod::Symlink if source_temp.is_none() => {
+            PlacementMethod::Symlink if !artifact.is_http => {
                 let relative_source = format!("./{}", source.display());
                 let to_source_relative =
                     pathdiff::diff_paths(&relative_source, dest.parent().unwrap())
@@ -66,8 +65,7 @@ pub fn artifacts(force: bool, profile: Option<String>) -> Result<()> {
                 create_symlink(&to_source_relative, &dest, force)?
             }
             _ => {
-                if source_temp.is_some()
-                    && matches!(artifact.placement_method, PlacementMethod::Symlink)
+                if artifact.is_http && matches!(artifact.placement_method, PlacementMethod::Symlink)
                 {
                     log::warn!(
                         "source が http/https のためコピーで配置します: {}",
@@ -80,9 +78,6 @@ pub fn artifacts(force: bool, profile: Option<String>) -> Result<()> {
                 }
                 copy_to_destination(&source, &dest, force)?
             }
-        }
-        if let Some(temp) = source_temp {
-            remove_path(&temp)?;
         }
     }
     log::info!("成果物のシンボリックリンクを作成しました");

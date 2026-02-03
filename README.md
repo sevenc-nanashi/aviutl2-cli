@@ -46,8 +46,8 @@ enabled = true
 [development]
 # ダウンロードするAviUtl2のバージョン
 aviutl2_version = "2.00beta31"
-# AviUtl2のインストール先ディレクトリ
-install_dir = "./development"
+# AviUtl2のインストール先ディレクトリ（省略時は ./.aviutl2-cli/development）
+install_dir = "./.aviutl2-cli/development"
 
 # リリース設定
 [release]
@@ -73,6 +73,7 @@ include = ["my_plugin_aul2", "my_plugin_aux2"]
 ### `au2 prepare`
 
 AviUtl2の開発環境をセットアップします（`prepare:schema -> prepare:aviutl2 -> prepare:artifacts`）。
+HTTP の成果物は `.aviutl2-cli/cache` にキャッシュされ、再取得する場合は `--refresh` を指定します。
 
 ### `au2 prepare:schema`
 
@@ -85,10 +86,12 @@ AviUtl2本体をダウンロードし、開発用ディレクトリに展開し�
 ### `au2 prepare:artifacts`
 
 開発用ディレクトリに成果物へのシンボリックリンクを作成します。
+HTTP の成果物を再取得する場合は `--refresh` を指定します。
 
 ### `au2 develop` / `au2 dev`
 
 開発用の成果物をビルドし、AviUtl2に配置します。
+HTTP の成果物を再取得する場合は `--refresh` を指定します。
 
 ### `au2 release`
 

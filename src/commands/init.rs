@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use fs_err as fs;
 use std::path::PathBuf;
 
-const INIT_TEMPLATE: &str = r#"#!schema: ./development/aviutl2.schema.json
+const INIT_TEMPLATE: &str = r#"#!schema: ./.aviutl2-cli/aviutl2.schema.json
 # 設定ファイルについては https://github.com/sevenc-nanashi/aviutl2-cli を参照してください。
 [project]
 name = "{{project_name}}"
@@ -48,11 +48,11 @@ pub fn run() -> Result<()> {
     let gitignore_path = PathBuf::from(".gitignore");
     if gitignore_path.exists() {
         let mut content = fs::read_to_string(&gitignore_path)?;
-        content.push_str("\n# AviUtl2 CLI\n/development\n/release\n");
+        content.push_str("\n# AviUtl2 CLI\n/.aviutl2-cli\n/release\n");
         fs::write(&gitignore_path, content)?;
         log::info!(".gitignore を更新しました");
     } else {
-        fs::write(&gitignore_path, "# AviUtl2 CLI\n/development\n/release\n")?;
+        fs::write(&gitignore_path, "# AviUtl2 CLI\n/.aviutl2-cli\n/release\n")?;
         log::info!(".gitignore を作成しました");
     }
     Ok(())

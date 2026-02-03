@@ -11,17 +11,22 @@ use crate::cli::Commands;
 pub fn run(command: Commands) -> Result<()> {
     match command {
         Commands::Init => init::run(),
-        Commands::Prepare { force } => {
+        Commands::Prepare { force, refresh } => {
             schema::run()?;
             prepare::aviutl2()?;
-            prepare::artifacts(force, None)
+            prepare::artifacts(force, None, refresh)
         }
         Commands::PrepareAviUtl2 => prepare::aviutl2(),
-        Commands::PrepareArtifacts { force, profile } => prepare::artifacts(force, profile),
+        Commands::PrepareArtifacts {
+            force,
+            profile,
+            refresh,
+        } => prepare::artifacts(force, profile, refresh),
         Commands::Develop {
             profile,
             skip_start,
-        } => develop::run(profile, skip_start),
+            refresh,
+        } => develop::run(profile, skip_start, refresh),
         Commands::PrepareSchema => schema::run(),
         Commands::Release {
             profile,
