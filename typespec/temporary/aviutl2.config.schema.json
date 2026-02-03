@@ -142,6 +142,9 @@
                 "Artifact": {
                     "type": "object",
                     "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
                         "source": {
                             "type": "string"
                         },
@@ -189,6 +192,9 @@
                 "ArtifactProfile": {
                     "type": "object",
                     "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
                         "source": {
                             "type": "string"
                         },

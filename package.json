@@ -3,8 +3,12 @@
   "private": true,
   "type": "module",
   "devDependencies": {
+    "@types/bun": "^1.3.8",
     "@typespec/compiler": "latest",
     "@typespec/json-schema": "latest",
     "serve": "^14.2.5"
+  },
+  "scripts": {
+    "typespec": "tsp compile typespec && bun run ./typespec/modifySchema.ts"
   }
 }

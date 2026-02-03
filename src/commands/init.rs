@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use fs_err as fs;
 use std::path::PathBuf;
 
-const INIT_TEMPLATE: &str = r#"#!schema: ./.aviutl2-cli/aviutl2.schema.json
+const INIT_TEMPLATE: &str = r#"#:schema ./.aviutl2-cli/aviutl2.schema.json
 # 設定ファイルについては https://github.com/sevenc-nanashi/aviutl2-cli を参照してください。
 [project]
 name = "{{project_name}}"

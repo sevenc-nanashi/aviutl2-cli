@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aviutl2.config.schema.json",
+  "type": "object",
+  "properties": {
+    "project": {
+      "$ref": "#/$defs/Project"
+    },
+    "artifacts": {
+      "$ref": "#/$defs/RecordArtifact"
+    },
+    "development": {
+      "$ref": "#/$defs/Development"
+    },
+    "release": {
+      "$ref": "#/$defs/Release"
+    }
+  },
+  "required": [
+    "project",
+    "artifacts"
+  ],
+  "$defs": {
+    "Project": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "RecordArtifact": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "$ref": "#/$defs/Artifact"
+      }
+    },
+    "Development": {
+      "type": "object",
+      "properties": {
+        "aviutl2_version": {
+          "type": "string"
+        },
+        "install_dir": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "prebuild": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "postbuild": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "aviutl2_version"
+      ]
+    },
+    "Release": {
+      "type": "object",
+      "properties": {
+        "output_dir": {
+          "type": "string"
+        },
+        "package_template": {
+          "type": "string"
+        },
+        "zip_name": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prebuild": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "postbuild": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Artifact": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "build": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "placement_method": {
+          "$ref": "#/$defs/PlacementMethod"
+        },
+        "profiles": {
+          "$ref": "#/$defs/RecordArtifactProfile"
+        }
+      },
+      "required": [
+        "destination"
+      ]
+    },
+    "PlacementMethod": {
+      "type": "string",
+      "enum": [
+        "symlink",
+        "copy"
+      ]
+    },
+    "RecordArtifactProfile": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "$ref": "#/$defs/ArtifactProfile"
+      }
+    },
+    "ArtifactProfile": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "string"
+        },
+        "build": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
