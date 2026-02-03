@@ -63,6 +63,8 @@ pub struct Development {
     pub aviutl2_version: String,
     pub install_dir: Option<String>,
     pub profile: Option<String>,
+    pub prebuild: Option<BuildCommand>,
+    pub postbuild: Option<BuildCommand>,
 }
 
 #[derive(Deserialize)]
@@ -72,6 +74,8 @@ pub struct Release {
     pub zip_name: Option<String>,
     pub profile: Option<String>,
     pub include: Option<Vec<String>>,
+    pub prebuild: Option<BuildCommand>,
+    pub postbuild: Option<BuildCommand>,
 }
 
 pub fn load_config() -> Result<Config> {

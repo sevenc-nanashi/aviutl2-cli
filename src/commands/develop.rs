@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use crate::config::load_config;
-use crate::config::{Config, PlacementMethod};
+use crate::config::{BuildCommand, Config, PlacementMethod};
 use crate::util::{copy_to_destination, development_dir, find_aviutl2_data_dir, resolve_source};
 
 pub struct ResolvedArtifact {
@@ -24,6 +24,7 @@ pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<(
         .as_deref()
         .or(dev.profile.as_deref())
         .unwrap_or("debug");
+    run_optional_commands(dev.prebuild.as_ref())?;
     let artifacts = resolve_artifacts(&config, Some(profile), None, refresh)?;
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
     let mut anything_copied = false;
@@ -39,6 +40,7 @@ pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<(
     if anything_copied {
         log::info!("成果物を配置しました");
     }
+    run_optional_commands(dev.postbuild.as_ref())?;
 
     if !skip_start {
         let aviutl_exe = data_dir.parent().unwrap_or(&data_dir).join("aviutl2.exe");
@@ -109,6 +111,13 @@ pub fn run_build_commands(commands: &[String]) -> Result<()> {
         if !status.success() {
             bail!("ビルドコマンドが失敗しました: {}", cmd);
         }
+    }
+    Ok(())
+}
+
+pub(crate) fn run_optional_commands(commands: Option<&BuildCommand>) -> Result<()> {
+    if let Some(commands) = commands {
+        run_build_commands(&commands.as_vec())?;
     }
     Ok(())
 }

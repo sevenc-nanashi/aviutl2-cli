@@ -48,6 +48,9 @@ enabled = true
 aviutl2_version = "2.00beta31"
 # AviUtl2のインストール先ディレクトリ（省略時は ./.aviutl2-cli/development）
 install_dir = "./.aviutl2-cli/development"
+# 開発用の事前/事後ビルドコマンド
+prebuild = "echo prebuild"
+postbuild = "echo postbuild"
 
 # リリース設定
 [release]
@@ -59,6 +62,9 @@ package_template = "package_template.txt"
 zip_name = "{name}-v{version}"
 # 使うプロファイル（デフォルトは`release`）
 profile = "release"
+# リリース用の事前/事後ビルドコマンド
+prebuild = "echo prebuild"
+postbuild = "echo postbuild"
 
 # 含める成果物のリスト（省略時はすべて含める）
 include = ["my_plugin_aul2", "my_plugin_aux2"]

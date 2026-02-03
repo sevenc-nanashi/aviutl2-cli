@@ -41,6 +41,8 @@ model Development {
   aviutl2_version: string;
   install_dir?: string;
   profile?: string;
+  prebuild?: BuildCommand;
+  postbuild?: BuildCommand;
 }
 
 model Release {
@@ -49,4 +51,6 @@ model Release {
   zip_name?: string;
   profile?: string;
   include?: string[];
+  prebuild?: BuildCommand;
+  postbuild?: BuildCommand;
 }
