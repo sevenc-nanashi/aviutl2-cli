@@ -234,12 +234,12 @@ pub fn development_dir(dev: &crate::config::Development) -> Result<PathBuf> {
     Ok(base)
 }
 
-pub fn resolve_source(source: &str, refresh: bool) -> Result<(PathBuf, bool)> {
+pub fn resolve_source(source: &str, refresh: bool) -> Result<PathBuf> {
     if is_http_url(source) {
         let downloaded = download_http_source(source, refresh)?;
-        return Ok((downloaded, true));
+        return Ok(downloaded);
     }
-    Ok((PathBuf::from(source), false))
+    Ok(PathBuf::from(source))
 }
 
 fn is_http_url(source: &str) -> bool {

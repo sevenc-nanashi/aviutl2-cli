@@ -57,21 +57,27 @@ pub fn artifacts(force: bool, profile: Option<String>, refresh: bool) -> Result<
         let source = artifact.source;
         let dest = data_dir.join(&artifact.destination);
         match artifact.placement_method {
-            PlacementMethod::Symlink if !artifact.is_http => {
-                let relative_source = format!("./{}", source.display());
+            PlacementMethod::Symlink => {
+                let relative_source = if source.is_absolute() {
+                    source.clone()
+                } else {
+                    std::env::current_dir()
+                        .with_context(|| "カレントディレクトリの取得に失敗しました")?
+                        .join(&source)
+                };
                 let to_source_relative =
-                    pathdiff::diff_paths(&relative_source, dest.parent().unwrap())
-                        .context("相対パスの計算に失敗しました")?;
+                    pathdiff::diff_paths(&relative_source, dest.parent().unwrap()).with_context(
+                        || {
+                            format!(
+                                "シンボリックリンクの相対パス計算に失敗しました: {} -> {}",
+                                dest.display(),
+                                relative_source.display()
+                            )
+                        },
+                    )?;
                 create_symlink(&to_source_relative, &dest, force)?
             }
             _ => {
-                if artifact.is_http && matches!(artifact.placement_method, PlacementMethod::Symlink)
-                {
-                    log::warn!(
-                        "source が http/https のためコピーで配置します: {}",
-                        source.display()
-                    );
-                }
                 if !source.exists() {
                     log::warn!("source が見つかりません: {}", source.display());
                     continue;

@@ -16,11 +16,11 @@ pub enum Commands {
     /// （prepare:schema -> prepare:aviutl2 -> prepare:artifacts）
     Prepare {
         /// 既存ファイルがある場合に上書きします
-        #[arg(long)]
+        #[arg(short, long)]
         force: bool,
 
         /// HTTP の成果物キャッシュを再取得します
-        #[arg(long)]
+        #[arg(short, long)]
         refresh: bool,
     },
 
@@ -36,7 +36,7 @@ pub enum Commands {
     #[command(name = "prepare:artifacts")]
     PrepareArtifacts {
         /// 既存ファイルがある場合に上書きします
-        #[arg(long)]
+        #[arg(short, long)]
         force: bool,
 
         /// 使うプロファイル名（デフォルトは debug）
@@ -44,7 +44,7 @@ pub enum Commands {
         profile: Option<String>,
 
         /// HTTP の成果物キャッシュを再取得します
-        #[arg(long)]
+        #[arg(short, long)]
         refresh: bool,
     },
 
@@ -60,7 +60,7 @@ pub enum Commands {
         skip_start: bool,
 
         /// HTTP の成果物キャッシュを再取得します
-        #[arg(long)]
+        #[arg(short, long)]
         refresh: bool,
     },
 
