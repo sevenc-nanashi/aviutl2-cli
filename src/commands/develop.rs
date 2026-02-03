@@ -4,10 +4,11 @@ use std::process::Command;
 
 use crate::config::load_config;
 use crate::config::{Config, PlacementMethod};
-use crate::util::{copy_to_destination, find_aviutl2_data_dir};
+use crate::util::{copy_to_destination, find_aviutl2_data_dir, remove_path, resolve_source};
 
 pub struct ResolvedArtifact {
     pub source: PathBuf,
+    pub source_temp: Option<PathBuf>,
     pub destination: PathBuf,
     pub build_commands: Vec<String>,
     pub placement_method: PlacementMethod,
@@ -26,15 +27,31 @@ pub fn run(profile: Option<String>, skip_start: bool) -> Result<()> {
         .unwrap_or("debug");
     let artifacts = resolve_artifacts(&config, Some(profile), None)?;
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
+    let mut anything_copied = false;
     for artifact in artifacts {
         run_build_commands(&artifact.build_commands)?;
         let dest = data_dir.join(&artifact.destination);
-        match artifact.placement_method {
-            PlacementMethod::Symlink => {}
-            PlacementMethod::Copy => copy_to_destination(&artifact.source, &dest, true)?,
+        let needs_copy = matches!(artifact.placement_method, PlacementMethod::Copy)
+            || artifact.source_temp.is_some();
+        if needs_copy {
+            if matches!(artifact.placement_method, PlacementMethod::Symlink)
+                && artifact.source_temp.is_some()
+            {
+                log::warn!(
+                    "source が http/https のためコピーで配置します: {}",
+                    artifact.source.display()
+                );
+            }
+            copy_to_destination(&artifact.source, &dest, true)?;
+            anything_copied = true;
+        }
+        if let Some(temp) = &artifact.source_temp {
+            remove_path(temp)?;
         }
     }
-    log::info!("成果物を配置しました");
+    if anything_copied {
+        log::info!("成果物を配置しました");
+    }
 
     if !skip_start {
         let aviutl_exe = data_dir.parent().unwrap_or(&data_dir).join("aviutl2.exe");
@@ -72,6 +89,7 @@ pub fn resolve_artifacts(
             .and_then(|p| p.source.clone())
             .or_else(|| artifact.source.clone())
             .with_context(|| format!("artifacts.{}.source が必要です", name))?;
+        let (source, source_temp) = resolve_source(&source)?;
         let build = profile_data
             .and_then(|p| p.build.clone())
             .or_else(|| artifact.build.clone());
@@ -80,7 +98,8 @@ pub fn resolve_artifacts(
             .placement_method
             .unwrap_or(PlacementMethod::Symlink);
         resolved.push(ResolvedArtifact {
-            source: PathBuf::from(source),
+            source,
+            source_temp,
             destination: PathBuf::from(&artifact.destination),
             build_commands,
             placement_method,

@@ -5,7 +5,9 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 
 use crate::config::{PlacementMethod, load_config};
-use crate::util::{copy_to_destination, create_symlink, extract_zip, find_aviutl2_data_dir};
+use crate::util::{
+    copy_to_destination, create_symlink, extract_zip, find_aviutl2_data_dir, remove_path,
+};
 
 const API_BASE: &str = "https://api.aviutl2.jp";
 
@@ -53,22 +55,34 @@ pub fn artifacts(force: bool, profile: Option<String>) -> Result<()> {
 
     for artifact in artifacts {
         let source = artifact.source;
+        let source_temp = artifact.source_temp;
         let dest = data_dir.join(&artifact.destination);
         match artifact.placement_method {
-            PlacementMethod::Symlink => {
+            PlacementMethod::Symlink if source_temp.is_none() => {
                 let relative_source = format!("./{}", source.display());
                 let to_source_relative =
                     pathdiff::diff_paths(&relative_source, dest.parent().unwrap())
                         .context("相対パスの計算に失敗しました")?;
                 create_symlink(&to_source_relative, &dest, force)?
             }
-            PlacementMethod::Copy => {
+            _ => {
+                if source_temp.is_some()
+                    && matches!(artifact.placement_method, PlacementMethod::Symlink)
+                {
+                    log::warn!(
+                        "source が http/https のためコピーで配置します: {}",
+                        source.display()
+                    );
+                }
                 if !source.exists() {
                     log::warn!("source が見つかりません: {}", source.display());
                     continue;
                 }
                 copy_to_destination(&source, &dest, force)?
             }
+        }
+        if let Some(temp) = source_temp {
+            remove_path(&temp)?;
         }
     }
     log::info!("成果物のシンボリックリンクを作成しました");

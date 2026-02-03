@@ -17,6 +17,8 @@ version = "0.1.0"
 [artifacts.my_plugin_aul2]
 # 成果物のファイルパス
 source = "i18n/english.aul2"
+# http/https の URL も指定できます
+# source = "https://example.com/my_plugin.aul2"
 # AviUtlのプラグインディレクトリ内での配置先パス
 destination = "Language/English.my_plugin.aul2"
 # ビルドコマンド

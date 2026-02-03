@@ -4,6 +4,7 @@ use fs_err::File;
 use std::io::Read;
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 use walkdir::WalkDir;
 use zip::write::FileOptions;
 
@@ -221,4 +222,70 @@ pub fn fill_template(template: &str, project: &crate::config::Project) -> String
     template
         .replace("{name}", &project.name)
         .replace("{version}", &project.version)
+}
+
+pub fn resolve_source(source: &str) -> Result<(PathBuf, Option<PathBuf>)> {
+    if is_http_url(source) {
+        let downloaded = download_http_source(source)?;
+        return Ok((downloaded.clone(), Some(downloaded)));
+    }
+    Ok((PathBuf::from(source), None))
+}
+
+fn is_http_url(source: &str) -> bool {
+    source.starts_with("http://") || source.starts_with("https://")
+}
+
+fn download_http_source(url: &str) -> Result<PathBuf> {
+    let file_name = filename_from_url(url);
+    let mut temp_dir = std::env::temp_dir();
+    temp_dir.push("aviutl2-cli");
+    fs::create_dir_all(&temp_dir)?;
+    let ts = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let mut temp_path = temp_dir.join(format!("{ts}_{file_name}"));
+
+    let agent: ureq::Agent = ureq::Agent::config_builder()
+        .max_redirects(5)
+        .build()
+        .into();
+    let response = agent
+        .get(url)
+        .header("User-Agent", "aviutl2-cli")
+        .call()
+        .with_context(|| format!("source のダウンロードに失敗しました: {url}"))?;
+    let status = response.status();
+    if !status.is_success() {
+        bail!("source のダウンロードに失敗しました: {} ({})", url, status);
+    }
+
+    let (_parts, body) = response.into_parts();
+    let mut reader = body.into_reader();
+    let mut buf = Vec::new();
+    reader.read_to_end(&mut buf)?;
+
+    if temp_path.exists() {
+        temp_path = temp_dir.join(format!("{ts}_{}_1", file_name));
+    }
+    let mut file = File::create(&temp_path)?;
+    file.write_all(&buf)?;
+    log::info!(
+        "source をダウンロードしました: {} -> {}",
+        url,
+        temp_path.display()
+    );
+    Ok(temp_path)
+}
+
+fn filename_from_url(url: &str) -> String {
+    let url = url.split('#').next().unwrap_or(url);
+    let url = url.split('?').next().unwrap_or(url);
+    let name = url.rsplit('/').next().unwrap_or("download");
+    if name.is_empty() {
+        "download".to_string()
+    } else {
+        name.to_string()
+    }
 }
