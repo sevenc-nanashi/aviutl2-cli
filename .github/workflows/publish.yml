@@ -92,11 +92,11 @@ jobs:
         run: |
           cargo build -r
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            cp target/release/au2.exe ./target/au2${{ matrix.prefix }}.exe
-            echo "au2_path=./target/au2${{ matrix.prefix }}.exe" >> $GITHUB_OUTPUT
+            cp target/release/au2.exe ./target/au2-v${{ github.event.inputs.version }}-windows.exe
+            echo "au2_path=./target/au2-v${{ github.event.inputs.version }}-windows.exe" >> $GITHUB_OUTPUT
           else
-            cp target/release/au2 ./target/au2${{ matrix.prefix }}
-            echo "au2_path=./target/au2${{ matrix.prefix }}" >> $GITHUB_OUTPUT
+            cp target/release/au2 ./target/au2-v${{ github.event.inputs.version }}-linux
+            echo "au2_path=./target/au2-v${{ github.event.inputs.version }}-linux" >> $GITHUB_OUTPUT
           fi
 
       - name: Create Release

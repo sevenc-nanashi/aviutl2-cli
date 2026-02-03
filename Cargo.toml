@@ -2,6 +2,10 @@
 name = "aviutl2-cli"
 version = "0.0.0"
 edition = "2024"
+authors = ["Nanashi. <sevenc7c.com>"]
+license = "MIT"
+description = "AviUtl2のプラグイン・スクリプト開発に便利なコマンドラインツール"
+repository = "https://github.com/sevenc-nanashi/aviutl2-cli"
 
 [[bin]]
 name = "au2"
