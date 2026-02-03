@@ -14,11 +14,11 @@ pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {
     let profile = profile
         .or_else(|| release.profile.clone())
         .unwrap_or_else(|| "release".to_string());
-    super::develop::run_optional_commands(release.prebuild.as_ref())?;
     let include = release.include.as_deref();
     let artifacts = super::develop::resolve_artifacts(&config, Some(&profile), include, false)?;
     let output_dir = PathBuf::from(release.output_dir.as_deref().unwrap_or("release"));
     fs::create_dir_all(&output_dir)?;
+    super::develop::run_optional_commands(release.prebuild.as_ref())?;
 
     let stage_dir = release_stage_dir()?;
     if stage_dir.exists() {
