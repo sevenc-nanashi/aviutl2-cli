@@ -1,11 +1,7 @@
 use clap::Subcommand;
 
 #[derive(clap::Parser)]
-#[command(
-    name = "au2",
-    version,
-    about = "AviUtl2 CLI",
-)]
+#[command(name = "au2", version, about = "AviUtl2 CLI")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

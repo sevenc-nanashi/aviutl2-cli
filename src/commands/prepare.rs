@@ -18,11 +18,22 @@ pub fn aviutl2() -> Result<()> {
     let install_dir = PathBuf::from(dev.install_dir.as_deref().unwrap_or("./development"));
     fs::create_dir_all(&install_dir)
         .with_context(|| format!("ディレクトリ作成に失敗しました: {}", install_dir.display()))?;
+    if let Ok(current_version) = fs::read_to_string(install_dir.join(".aviutl2-version"))
+        && current_version == dev.aviutl2_version
+    {
+        log::info!(
+            "AviUtl2 のバージョンが一致しています: {}",
+            dev.aviutl2_version
+        );
+        return Ok(());
+    }
 
     let zip_path = download_aviutl2_zip(&dev.aviutl2_version)?;
     extract_zip(&zip_path, &install_dir)?;
     fs::remove_file(&zip_path).ok();
     log::info!("AviUtl2 を展開しました: {}", install_dir.display());
+    let mut version = File::create(install_dir.join(".aviutl2-version"))?;
+    version.write_all(dev.aviutl2_version.as_bytes())?;
     Ok(())
 }
 

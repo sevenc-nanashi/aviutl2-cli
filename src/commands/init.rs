@@ -48,6 +48,9 @@ pub fn run() -> Result<()> {
         content.push_str("\n# AviUtl2 CLI\n/development\n/release\n");
         fs::write(&gitignore_path, content)?;
         log::info!(".gitignore を更新しました");
+    } else {
+        fs::write(&gitignore_path, "# AviUtl2 CLI\n/development\n/release\n")?;
+        log::info!(".gitignore を作成しました");
     }
     Ok(())
 }
