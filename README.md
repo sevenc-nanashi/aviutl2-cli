@@ -2,6 +2,20 @@
 
 AviUtl2のプラグイン・スクリプト開発に便利なコマンドラインツール。
 
+## インストール
+
+ビルド済みバイナリは[Releases](https://github.com/sevenc-nanashi/aviutl2-cli/releases/latest)からダウンロードできます：
+
+```sh
+mise use github:sevenc-nanashi/aviutl2-cli
+```
+
+RustのCargoからもインストールできます：
+
+```sh
+cargo install aviutl2-cli
+```
+
 ## 設定
 
 設定は`aviutl2.toml`に記述します。`.config/aviutl2.toml`に配置することもできます。
