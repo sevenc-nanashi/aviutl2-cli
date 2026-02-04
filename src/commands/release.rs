@@ -51,6 +51,14 @@ pub(crate) fn build_release_stage(
     refresh: bool,
 ) -> Result<PathBuf> {
     let artifacts = super::develop::resolve_artifacts(config, Some(profile), include, refresh)?;
+    build_release_stage_from_artifacts(artifacts, package_template, &config.project)
+}
+
+pub(crate) fn build_release_stage_from_artifacts(
+    artifacts: Vec<super::develop::ResolvedArtifact>,
+    package_template: Option<&str>,
+    project: &crate::config::Project,
+) -> Result<PathBuf> {
     let stage_dir = release_stage_dir()?;
     if stage_dir.exists() {
         fs::remove_dir_all(&stage_dir)?;
@@ -75,7 +83,7 @@ pub(crate) fn build_release_stage(
                 template_path.display()
             )
         })?;
-        let content = fill_template(&content, &config.project);
+        let content = fill_template(&content, project);
         let content = normalize_to_crlf(&content);
         fs::write(&target, content).with_context(|| {
             format!("package.txt の書き込みに失敗しました: {}", target.display())
