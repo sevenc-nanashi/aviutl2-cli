@@ -4,19 +4,24 @@
   "type": "object",
   "properties": {
     "project": {
-      "$ref": "#/$defs/Project"
+      "$ref": "#/$defs/Project",
+      "description": "プロジェクト設定"
     },
     "artifacts": {
-      "$ref": "#/$defs/RecordArtifact"
+      "$ref": "#/$defs/RecordArtifact",
+      "description": "成果物の定義"
     },
     "development": {
-      "$ref": "#/$defs/Development"
+      "$ref": "#/$defs/Development",
+      "description": "開発用の設定"
     },
     "preview": {
-      "$ref": "#/$defs/Preview"
+      "$ref": "#/$defs/Preview",
+      "description": "プレビュー用の設定"
     },
     "release": {
-      "$ref": "#/$defs/Release"
+      "$ref": "#/$defs/Release",
+      "description": "リリース用の設定"
     }
   },
   "required": [
@@ -28,10 +33,12 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "プロジェクト名"
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "description": "バージョン"
         }
       },
       "required": [
@@ -50,13 +57,16 @@
       "type": "object",
       "properties": {
         "aviutl2_version": {
-          "type": "string"
+          "type": "string",
+          "description": "AviUtl2 のバージョン"
         },
         "install_dir": {
-          "type": "string"
+          "type": "string",
+          "description": "AviUtl2 のインストール先"
         },
         "profile": {
-          "type": "string"
+          "type": "string",
+          "description": "使うプロファイル名（デフォルトは debug）"
         },
         "prebuild": {
           "anyOf": [
@@ -69,7 +79,8 @@
                 "type": "string"
               }
             }
-          ]
+          ],
+          "description": "事前ビルドコマンド"
         },
         "postbuild": {
           "anyOf": [
@@ -82,79 +93,35 @@
                 "type": "string"
               }
             }
-          ]
+          ],
+          "description": "事後ビルドコマンド"
         }
       },
       "required": [
         "aviutl2_version"
       ]
     },
-    "Release": {
-      "type": "object",
-      "properties": {
-        "output_dir": {
-          "type": "string"
-        },
-        "package_template": {
-          "type": "string"
-        },
-        "zip_name": {
-          "type": "string"
-        },
-        "profile": {
-          "type": "string"
-        },
-        "include": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "prebuild": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
-        },
-        "postbuild": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
-        }
-      }
-    },
     "Preview": {
       "type": "object",
       "properties": {
         "aviutl2_version": {
-          "type": "string"
+          "type": "string",
+          "description": "AviUtl2 のバージョン（省略時は development.aviutl2_version）"
         },
         "install_dir": {
-          "type": "string"
+          "type": "string",
+          "description": "AviUtl2 のインストール先"
         },
         "profile": {
-          "type": "string"
+          "type": "string",
+          "description": "使うプロファイル名（デフォルトは release）"
         },
         "include": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "含める成果物のリスト（省略時は release.include を使用）"
         },
         "prebuild": {
           "anyOf": [
@@ -167,7 +134,8 @@
                 "type": "string"
               }
             }
-          ]
+          ],
+          "description": "事前ビルドコマンド"
         },
         "postbuild": {
           "anyOf": [
@@ -180,7 +148,64 @@
                 "type": "string"
               }
             }
-          ]
+          ],
+          "description": "事後ビルドコマンド"
+        }
+      }
+    },
+    "Release": {
+      "type": "object",
+      "properties": {
+        "output_dir": {
+          "type": "string",
+          "description": "出力ディレクトリ"
+        },
+        "package_template": {
+          "type": "string",
+          "description": "package.txt のテンプレート"
+        },
+        "zip_name": {
+          "type": "string",
+          "description": "zip の名前（`.au2pkg.zip` は自動付与）"
+        },
+        "profile": {
+          "type": "string",
+          "description": "使うプロファイル名（デフォルトは release）"
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "含める成果物のリスト（省略時はすべて含める）"
+        },
+        "prebuild": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "事前ビルドコマンド"
+        },
+        "postbuild": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "事後ビルドコマンド"
         }
       }
     },
@@ -188,13 +213,16 @@
       "type": "object",
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "成果物の有効/無効（デフォルトは true）"
         },
         "source": {
-          "type": "string"
+          "type": "string",
+          "description": "成果物のパス"
         },
         "destination": {
-          "type": "string"
+          "type": "string",
+          "description": "AviUtl2 の data 配下での配置先"
         },
         "build": {
           "anyOf": [
@@ -207,13 +235,16 @@
                 "type": "string"
               }
             }
-          ]
+          ],
+          "description": "ビルドコマンド"
         },
         "placement_method": {
-          "$ref": "#/$defs/PlacementMethod"
+          "$ref": "#/$defs/PlacementMethod",
+          "description": "配置方法（symlink / copy）"
         },
         "profiles": {
-          "$ref": "#/$defs/RecordArtifactProfile"
+          "$ref": "#/$defs/RecordArtifactProfile",
+          "description": "プロファイルごとの設定"
         }
       },
       "required": [
@@ -238,10 +269,12 @@
       "type": "object",
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "成果物の有効/無効（デフォルトは true）"
         },
         "source": {
-          "type": "string"
+          "type": "string",
+          "description": "成果物のパス"
         },
         "build": {
           "anyOf": [
@@ -254,7 +287,8 @@
                 "type": "string"
               }
             }
-          ]
+          ],
+          "description": "ビルドコマンド"
         }
       }
     }

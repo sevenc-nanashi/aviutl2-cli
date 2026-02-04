@@ -137,6 +137,18 @@ HTTP の成果物を再取得する場合は `--refresh` を指定します。
 
 リリース用の成果物をビルドし、プレビュー用ディレクトリに配置します。
 
+## TypeSpec
+
+設定ファイルの JSON Schema は TypeSpec から生成しています。
+
+```sh
+nr typespec
+```
+
+生成物:
+- `typespec/temporary/aviutl2.config.schema.json`（TypeSpec の出力）
+- `src/schema.json`（CLI が参照する最終的な schema）
+
 ## ライセンス
 
 MIT License で公開しています。
