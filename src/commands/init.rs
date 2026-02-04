@@ -27,6 +27,11 @@ aviutl2_version = "2.00beta31"
 # prebuild = "echo prebuild"
 # postbuild = "echo postbuild"
 
+[preview]
+# aviutl2_version = "2.00beta31"
+# prebuild = "echo prebuild"
+# postbuild = "echo postbuild"
+
 [release]
 package_template = "package_template.txt"
 # prebuild = "echo prebuild"

@@ -9,6 +9,7 @@ pub struct Config {
     pub project: Project,
     pub artifacts: HashMap<String, Artifact>,
     pub development: Option<Development>,
+    pub preview: Option<Preview>,
     pub release: Option<Release>,
 }
 
@@ -63,6 +64,16 @@ pub struct Development {
     pub aviutl2_version: String,
     pub install_dir: Option<String>,
     pub profile: Option<String>,
+    pub prebuild: Option<BuildCommand>,
+    pub postbuild: Option<BuildCommand>,
+}
+
+#[derive(Deserialize)]
+pub struct Preview {
+    pub aviutl2_version: Option<String>,
+    pub install_dir: Option<String>,
+    pub profile: Option<String>,
+    pub include: Option<Vec<String>>,
     pub prebuild: Option<BuildCommand>,
     pub postbuild: Option<BuildCommand>,
 }

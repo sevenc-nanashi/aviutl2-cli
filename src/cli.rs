@@ -74,4 +74,19 @@ pub enum Commands {
         #[arg(long = "set-version")]
         set_version: Option<String>,
     },
+
+    /// リリース成果物をプレビュー用ディレクトリに配置します
+    Preview {
+        /// 使うプロファイル名（デフォルトは release）
+        #[arg(short = 'p', long = "profile")]
+        profile: Option<String>,
+
+        /// AviUtl2を起動しない
+        #[arg(short = 's', long = "skip-start")]
+        skip_start: bool,
+
+        /// HTTP の成果物キャッシュを再取得します
+        #[arg(short, long)]
+        refresh: bool,
+    },
 }

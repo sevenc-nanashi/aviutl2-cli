@@ -12,6 +12,9 @@
     "development": {
       "$ref": "#/$defs/Development"
     },
+    "preview": {
+      "$ref": "#/$defs/Preview"
+    },
     "release": {
       "$ref": "#/$defs/Release"
     }
@@ -96,6 +99,52 @@
           "type": "string"
         },
         "zip_name": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prebuild": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "postbuild": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Preview": {
+      "type": "object",
+      "properties": {
+        "aviutl2_version": {
+          "type": "string"
+        },
+        "install_dir": {
           "type": "string"
         },
         "profile": {

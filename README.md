@@ -67,6 +67,20 @@ install_dir = "./.aviutl2-cli/development"
 prebuild = "echo prebuild"
 postbuild = "echo postbuild"
 
+# プレビュー用の設定
+[preview]
+# ダウンロードするAviUtl2のバージョン（省略時は development.aviutl2_version）
+aviutl2_version = "2.00beta31"
+# AviUtl2のインストール先ディレクトリ（省略時は ./.aviutl2-cli/preview）
+install_dir = "./.aviutl2-cli/preview"
+# 使うプロファイル（デフォルトは`release`）
+profile = "release"
+# 含める成果物のリスト（省略時は release.include を使用）
+include = ["my_plugin_aul2", "my_plugin_aux2"]
+# プレビュー用の事前/事後ビルドコマンド
+prebuild = "echo prebuild"
+postbuild = "echo postbuild"
+
 # リリース設定
 [release]
 # 出力ディレクトリ
@@ -118,6 +132,10 @@ HTTP の成果物を再取得する場合は `--refresh` を指定します。
 
 成果物をビルドし、リリース用のパッケージを作成します。
 `--set-version` を指定すると `aviutl2.toml` の `project.version` を上書きできます。
+
+### `au2 preview`
+
+リリース用の成果物をビルドし、プレビュー用ディレクトリに配置します。
 
 ## ライセンス
 

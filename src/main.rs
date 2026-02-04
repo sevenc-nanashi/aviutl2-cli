@@ -13,7 +13,7 @@ fn main() {
         .init();
     let cli = cli::Cli::parse();
     if let Err(e) = commands::run(cli.command) {
-        log::error!("{}", e);
+        log::error!("{:?}", e);
         std::process::exit(1);
     }
 }

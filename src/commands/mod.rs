@@ -1,5 +1,6 @@
 mod develop;
 mod init;
+mod preview;
 mod prepare;
 mod release;
 mod schema;
@@ -32,5 +33,10 @@ pub fn run(command: Commands) -> Result<()> {
             profile,
             set_version,
         } => release::run(profile, set_version),
+        Commands::Preview {
+            profile,
+            skip_start,
+            refresh,
+        } => preview::run(profile, skip_start, refresh),
     }
 }

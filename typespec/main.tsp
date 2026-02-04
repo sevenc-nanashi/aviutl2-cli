@@ -7,6 +7,7 @@ model Config {
   project: Project;
   artifacts: Record<Artifact>;
   development?: Development;
+  preview?: Preview;
   release?: Release;
 }
 
@@ -41,6 +42,15 @@ model Development {
   aviutl2_version: string;
   install_dir?: string;
   profile?: string;
+  prebuild?: BuildCommand;
+  postbuild?: BuildCommand;
+}
+
+model Preview {
+  aviutl2_version?: string;
+  install_dir?: string;
+  profile?: string;
+  include?: string[];
   prebuild?: BuildCommand;
   postbuild?: BuildCommand;
 }

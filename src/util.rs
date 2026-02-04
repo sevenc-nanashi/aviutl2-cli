@@ -183,6 +183,22 @@ pub fn copy_to_destination(source: &Path, destination: &Path, force: bool) -> Re
     Ok(())
 }
 
+pub fn copy_dir_contents(source_dir: &Path, destination_dir: &Path, force: bool) -> Result<()> {
+    for entry in WalkDir::new(source_dir)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
+        let path = entry.path();
+        if path.is_dir() {
+            continue;
+        }
+        let rel = path.strip_prefix(source_dir)?;
+        let dest = destination_dir.join(rel);
+        copy_to_destination(path, &dest, force)?;
+    }
+    Ok(())
+}
+
 pub fn find_aviutl2_data_dir(install_dir: &Path) -> Result<PathBuf> {
     if !install_dir.exists() {
         bail!(
@@ -231,6 +247,15 @@ pub fn development_dir(dev: &crate::config::Development) -> Result<PathBuf> {
     }
     let mut base = cli_dir()?;
     base.push("development");
+    Ok(base)
+}
+
+pub fn preview_dir(preview: &crate::config::Preview) -> Result<PathBuf> {
+    if let Some(install_dir) = preview.install_dir.as_deref() {
+        return Ok(PathBuf::from(install_dir));
+    }
+    let mut base = cli_dir()?;
+    base.push("preview");
     Ok(base)
 }
 
