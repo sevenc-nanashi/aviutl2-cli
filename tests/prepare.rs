@@ -117,7 +117,7 @@ destination = "Plugin/my_plugin.aux2"
 placement_method = "copy"
 
 [development]
-aviutl2_version = "2.00beta31"
+aviutl2_version = "latest"
 install_dir = "dev"
 "#,
     )?;
@@ -170,7 +170,7 @@ destination = "Plugin/my_plugin.aux2"
 placement_method = "symlink"
 
 [development]
-aviutl2_version = "2.00beta31"
+aviutl2_version = "latest"
 install_dir = "dev"
 "#,
     )?;
@@ -224,7 +224,7 @@ fn prepare_artifacts_downloads_http_source() -> Result<(), Box<dyn std::error::E
     write_file(
         &config_path,
         format!(
-            "[project]\nname = \"prepare\"\nversion = \"0.1.0\"\n\n[artifacts.my_plugin]\nsource = \"{}\"\ndestination = \"Plugin/my_plugin.aux2\"\nplacement_method = \"copy\"\n\n[development]\naviutl2_version = \"2.00beta31\"\ninstall_dir = \"dev\"\n",
+            "[project]\nname = \"prepare\"\nversion = \"0.1.0\"\n\n[artifacts.my_plugin]\nsource = \"{}\"\ndestination = \"Plugin/my_plugin.aux2\"\nplacement_method = \"copy\"\n\n[development]\naviutl2_version = \"latest\"\ninstall_dir = \"dev\"\n",
             source_url
         )
         .as_bytes(),

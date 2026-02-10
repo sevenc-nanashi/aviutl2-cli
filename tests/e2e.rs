@@ -75,7 +75,7 @@ version = "0.1.0"
 [artifacts]
 
 [development]
-aviutl2_version = "2.00beta31"
+aviutl2_version = "latest"
 install_dir = "devdir"
 "#,
     )?;

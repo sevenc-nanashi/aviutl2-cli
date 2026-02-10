@@ -23,12 +23,12 @@ source = "target/release/my_plugin_aux2.dll"
 enabled = true
 
 [development]
-aviutl2_version = "2.00beta31"
+aviutl2_version = "latest"
 # prebuild = "echo prebuild"
 # postbuild = "echo postbuild"
 
 [preview]
-# aviutl2_version = "2.00beta31"
+# aviutl2_version = "latest"
 # prebuild = "echo prebuild"
 # postbuild = "echo postbuild"
 

@@ -60,7 +60,7 @@ enabled = true
 # 開発時の設定
 [development]
 # ダウンロードするAviUtl2のバージョン
-aviutl2_version = "2.00beta31"
+aviutl2_version = "latest"
 # AviUtl2のインストール先ディレクトリ（省略時は ./.aviutl2-cli/development）
 install_dir = "./.aviutl2-cli/development"
 # 開発用の事前/事後ビルドコマンド
@@ -70,7 +70,7 @@ postbuild = "echo postbuild"
 # プレビュー用の設定
 [preview]
 # ダウンロードするAviUtl2のバージョン（省略時は development.aviutl2_version）
-aviutl2_version = "2.00beta31"
+aviutl2_version = "latest"
 # AviUtl2のインストール先ディレクトリ（省略時は ./.aviutl2-cli/preview）
 install_dir = "./.aviutl2-cli/preview"
 # 使うプロファイル（デフォルトは`release`）
