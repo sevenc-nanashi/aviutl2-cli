@@ -12,6 +12,8 @@ model Config {
   project: Project;
   /** 成果物の定義 */
   artifacts: Record<Artifact>;
+  /** ビルドコマンドのグループ定義 */
+  build_group?: Record<BuildCommand>;
   /** 開発用の設定 */
   development?: Development;
   /** プレビュー用の設定 */
@@ -52,7 +54,12 @@ model ArtifactProfile {
 }
 
 /** 単一または複数のビルドコマンド */
-alias BuildCommand = string | string[];
+alias BuildCommand = string | string[] | BuildGroupRef;
+
+model BuildGroupRef {
+  /** 利用する build_group のキー */
+  group: string;
+}
 
 enum PlacementMethod {
   /** シンボリックリンク */

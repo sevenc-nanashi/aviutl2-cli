@@ -11,6 +11,27 @@
       "$ref": "#/$defs/RecordArtifact",
       "description": "成果物の定義"
     },
+    "build_group": {
+      "type": "object",
+      "description": "ビルドコマンドのグループ定義",
+      "properties": {},
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/$defs/BuildGroupRef"
+          }
+        ]
+      }
+    },
     "development": {
       "$ref": "#/$defs/Development",
       "description": "開発用の設定"
@@ -78,6 +99,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "$ref": "#/$defs/BuildGroupRef"
             }
           ],
           "description": "事前ビルドコマンド"
@@ -92,6 +116,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "$ref": "#/$defs/BuildGroupRef"
             }
           ],
           "description": "事後ビルドコマンド"
@@ -133,6 +160,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "$ref": "#/$defs/BuildGroupRef"
             }
           ],
           "description": "事前ビルドコマンド"
@@ -147,6 +177,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "$ref": "#/$defs/BuildGroupRef"
             }
           ],
           "description": "事後ビルドコマンド"
@@ -189,6 +222,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "$ref": "#/$defs/BuildGroupRef"
             }
           ],
           "description": "事前ビルドコマンド"
@@ -203,6 +239,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "$ref": "#/$defs/BuildGroupRef"
             }
           ],
           "description": "事後ビルドコマンド"
@@ -234,6 +273,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "$ref": "#/$defs/BuildGroupRef"
             }
           ],
           "description": "ビルドコマンド"
@@ -256,6 +298,18 @@
       "enum": [
         "symlink",
         "copy"
+      ]
+    },
+    "BuildGroupRef": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "利用する build_group のキー"
+        }
+      },
+      "required": [
+        "group"
       ]
     },
     "RecordArtifactProfile": {
@@ -286,6 +340,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "$ref": "#/$defs/BuildGroupRef"
             }
           ],
           "description": "ビルドコマンド"

@@ -8,6 +8,7 @@ use std::path::PathBuf;
 pub struct Config {
     pub project: Project,
     pub artifacts: HashMap<String, Artifact>,
+    pub build_group: Option<HashMap<String, BuildCommand>>,
     pub development: Option<Development>,
     pub preview: Option<Preview>,
     pub release: Option<Release>,
@@ -48,15 +49,12 @@ pub enum PlacementMethod {
 pub enum BuildCommand {
     Single(String),
     Multiple(Vec<String>),
+    Group(BuildGroupRef),
 }
 
-impl BuildCommand {
-    pub fn as_vec(&self) -> Vec<String> {
-        match self {
-            BuildCommand::Single(cmd) => vec![cmd.clone()],
-            BuildCommand::Multiple(cmds) => cmds.clone(),
-        }
-    }
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
+pub struct BuildGroupRef {
+    pub group: String,
 }
 
 #[derive(Deserialize)]

@@ -11,7 +11,7 @@ AviUtl2のプラグイン・スクリプト開発に便利なコマンドライ�
 "github:sevenc-nanashi/aviutl2-cli" = { version = "latest", bin = "au2.exe" }
 ```
 
-RustのCargoからもインストールできます：
+crates.ioからもインストールできます：
 
 ```sh
 cargo install aviutl2-cli
@@ -56,6 +56,21 @@ source = "target/debug/my_plugin_aux2.dll"
 build = ["echo Building release...", "cargo build --release"]
 source = "target/release/my_plugin_aux2.dll"
 enabled = true
+
+# ビルドグループの定義
+# 1つのコマンドが複数の成果物をビルドする場合に使います。
+[build_group]
+hoge = ["cmake -S . -B build", "cmake --build build"]
+
+[artifacts.my_plugin_tool]
+source = "target/release/my_plugin_tool.dll"
+destination = "Plugin/my_plugin_tool.auf2"
+build = { group = "hoge" }
+
+[artifacts.my_plugin_tool_2]
+source = "target/release/my_plugin_tool_2.dll"
+destination = "Plugin/my_plugin_tool_2.auf2"
+build = { group = "hoge" }
 
 # 開発時の設定
 [development]

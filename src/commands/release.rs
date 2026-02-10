@@ -17,7 +17,7 @@ pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {
         .unwrap_or_else(|| "release".to_string());
     let output_dir = PathBuf::from(release.output_dir.as_deref().unwrap_or("release"));
     fs::create_dir_all(&output_dir)?;
-    super::develop::run_optional_commands(release.prebuild.as_ref())?;
+    super::develop::run_optional_commands(release.prebuild.as_ref(), config.build_group.as_ref())?;
     let stage_dir = build_release_stage(
         &config,
         &profile,
@@ -39,7 +39,7 @@ pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {
     let zip_path = output_dir.join(zip_file_name);
     create_zip(&stage_dir, &zip_path)?;
     log::info!("リリースパッケージを作成しました: {}", zip_path.display());
-    super::develop::run_optional_commands(release.postbuild.as_ref())?;
+    super::develop::run_optional_commands(release.postbuild.as_ref(), config.build_group.as_ref())?;
     Ok(())
 }
 
@@ -65,8 +65,9 @@ pub(crate) fn build_release_stage_from_artifacts(
     }
     fs::create_dir_all(&stage_dir)?;
 
+    let mut executed_groups = std::collections::HashSet::new();
     for artifact in artifacts {
-        super::develop::run_build_commands(&artifact.build_commands)?;
+        super::develop::run_build_plan(&artifact.build_plan, &mut executed_groups)?;
         copy_to_destination(
             &artifact.source,
             &stage_dir.join(&artifact.destination),
