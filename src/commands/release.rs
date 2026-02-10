@@ -2,8 +2,8 @@ use anyhow::{Context, Result};
 use fs_err as fs;
 use std::path::PathBuf;
 
-use crate::config::load_config;
 use crate::config::Config;
+use crate::config::load_config;
 use crate::util::{copy_to_destination, create_zip, fill_template, release_stage_dir};
 
 pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {

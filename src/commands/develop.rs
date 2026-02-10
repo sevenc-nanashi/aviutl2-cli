@@ -19,6 +19,7 @@ pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<(
         .development
         .as_ref()
         .context("development 設定が必要です")?;
+    warn_if_prepare_snapshot_changed(&config, &dev.aviutl2_version)?;
     let install_dir = development_dir(dev)?;
     let profile = profile
         .as_deref()
@@ -52,6 +53,28 @@ pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<(
         } else {
             log::warn!("AviUtl2.exe が見つかりません: {}", aviutl_exe.display());
         }
+    }
+    Ok(())
+}
+
+fn warn_if_prepare_snapshot_changed(config: &Config, aviutl2_version: &str) -> Result<()> {
+    let Some(snapshot) = super::prepare::load_prepare_snapshot()? else {
+        return Ok(());
+    };
+    let mut ordered = std::collections::BTreeMap::new();
+    for (name, artifact) in &config.artifacts {
+        ordered.insert(name.clone(), artifact.clone());
+    }
+    let current = super::prepare::PrepareSnapshot {
+        aviutl2_version: aviutl2_version.to_string(),
+        artifacts: ordered,
+    };
+    if snapshot.aviutl2_version != current.aviutl2_version
+        || snapshot.artifacts != current.artifacts
+    {
+        log::warn!(
+            "prepare 実行時の設定と現在の設定が異なります。必要なら `au2 prepare` を再実行してください。"
+        );
     }
     Ok(())
 }

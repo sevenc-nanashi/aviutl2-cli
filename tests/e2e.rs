@@ -86,9 +86,7 @@ install_dir = "devdir"
         .assert()
         .success();
 
-    let schema_path = project_dir
-        .join(".aviutl2-cli")
-        .join("aviutl2.schema.json");
+    let schema_path = project_dir.join(".aviutl2-cli").join("aviutl2.schema.json");
     assert!(schema_path.exists());
 
     Ok(())

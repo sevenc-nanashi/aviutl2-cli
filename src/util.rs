@@ -278,7 +278,11 @@ fn download_http_source(url: &str, refresh: bool) -> Result<PathBuf> {
     let hash = hash_url(url);
     let cache_path = cache_dir.join(format!("{hash}_{file_name}"));
     if cache_path.exists() && !refresh {
-        log::info!("source のキャッシュを使用します: {} -> {}", url, cache_path.display());
+        log::info!(
+            "source のキャッシュを使用します: {} -> {}",
+            url,
+            cache_path.display()
+        );
         return Ok(cache_path);
     }
     let ts = SystemTime::now()
@@ -349,6 +353,12 @@ fn http_cache_dir() -> Result<PathBuf> {
 fn cli_dir() -> Result<PathBuf> {
     let mut base = std::env::current_dir().context("カレントディレクトリの取得に失敗しました")?;
     base.push(".aviutl2-cli");
+    Ok(base)
+}
+
+pub fn prepare_snapshot_path() -> Result<PathBuf> {
+    let mut base = cli_dir()?;
+    base.push("prepare-artifacts.json");
     Ok(base)
 }
 

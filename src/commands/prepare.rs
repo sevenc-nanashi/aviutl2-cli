@@ -1,12 +1,15 @@
 use anyhow::{Context, Result, bail};
 use fs_err as fs;
 use fs_err::File;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
-use crate::config::{PlacementMethod, load_config};
+use crate::config::{Artifact, PlacementMethod, load_config};
 use crate::util::{
     copy_to_destination, create_symlink, development_dir, extract_zip, find_aviutl2_data_dir,
+    prepare_snapshot_path,
 };
 
 const API_BASE: &str = "https://api.aviutl2.jp";
@@ -22,12 +25,8 @@ pub fn aviutl2() -> Result<()> {
 }
 
 pub fn aviutl2_in(install_dir: &PathBuf, aviutl2_version: &str) -> Result<()> {
-    fs::create_dir_all(install_dir).with_context(|| {
-        format!(
-            "ディレクトリ作成に失敗しました: {}",
-            install_dir.display()
-        )
-    })?;
+    fs::create_dir_all(install_dir)
+        .with_context(|| format!("ディレクトリ作成に失敗しました: {}", install_dir.display()))?;
     if let Ok(current_version) = fs::read_to_string(install_dir.join(".aviutl2-version"))
         && current_version == aviutl2_version
     {
@@ -92,7 +91,45 @@ pub fn artifacts(force: bool, profile: Option<String>, refresh: bool) -> Result<
         }
     }
     log::info!("成果物のシンボリックリンクを作成しました");
+    save_prepare_snapshot(&config.artifacts, &dev.aviutl2_version)?;
     Ok(())
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PrepareSnapshot {
+    pub aviutl2_version: String,
+    pub artifacts: BTreeMap<String, Artifact>,
+}
+
+pub fn save_prepare_snapshot(
+    artifacts: &std::collections::HashMap<String, Artifact>,
+    aviutl2_version: &str,
+) -> Result<()> {
+    let mut ordered = BTreeMap::new();
+    for (name, artifact) in artifacts {
+        ordered.insert(name.clone(), artifact.clone());
+    }
+    let snapshot = PrepareSnapshot {
+        aviutl2_version: aviutl2_version.to_string(),
+        artifacts: ordered,
+    };
+    let snapshot_path = prepare_snapshot_path()?;
+    if let Some(parent) = snapshot_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let content = serde_json::to_string_pretty(&snapshot)?;
+    fs::write(&snapshot_path, content)?;
+    Ok(())
+}
+
+pub fn load_prepare_snapshot() -> Result<Option<PrepareSnapshot>> {
+    let snapshot_path = prepare_snapshot_path()?;
+    if !snapshot_path.exists() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(snapshot_path)?;
+    let snapshot = serde_json::from_str(&content)?;
+    Ok(Some(snapshot))
 }
 
 fn download_aviutl2_zip(version: &str) -> Result<PathBuf> {

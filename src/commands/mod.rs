@@ -1,7 +1,7 @@
 mod develop;
 mod init;
-mod preview;
 mod prepare;
+mod preview;
 mod release;
 mod schema;
 

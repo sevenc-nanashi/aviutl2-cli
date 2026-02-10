@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, bail};
 use fs_err as fs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -19,7 +19,7 @@ pub struct Project {
     pub version: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
 pub struct Artifact {
     pub enabled: Option<bool>,
     pub source: Option<String>,
@@ -29,21 +29,21 @@ pub struct Artifact {
     pub profiles: Option<HashMap<String, ArtifactProfile>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
 pub struct ArtifactProfile {
     pub enabled: Option<bool>,
     pub source: Option<String>,
     pub build: Option<BuildCommand>,
 }
 
-#[derive(Clone, Copy, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum PlacementMethod {
     Symlink,
     Copy,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum BuildCommand {
     Single(String),
