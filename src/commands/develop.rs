@@ -1,7 +1,7 @@
 use anyhow::{Context, Result, bail};
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::process::Command;
-use std::collections::HashSet;
 
 use crate::config::load_config;
 use crate::config::{BuildCommand, Config, PlacementMethod};
@@ -134,10 +134,7 @@ pub fn resolve_artifacts(
     Ok(resolved)
 }
 
-pub fn run_build_plan(
-    plan: &ResolvedBuild,
-    executed_groups: &mut HashSet<String>,
-) -> Result<()> {
+pub fn run_build_plan(plan: &ResolvedBuild, executed_groups: &mut HashSet<String>) -> Result<()> {
     if let Some(group) = &plan.group {
         if executed_groups.contains(group) {
             return Ok(());

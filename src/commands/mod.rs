@@ -1,3 +1,4 @@
+mod catalog;
 mod develop;
 mod init;
 mod prepare;
@@ -38,5 +39,6 @@ pub fn run(command: Commands) -> Result<()> {
             skip_start,
             refresh,
         } => preview::run(profile, skip_start, refresh),
+        Commands::Catalog => catalog::run(),
     }
 }

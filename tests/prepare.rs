@@ -38,8 +38,8 @@ fn can_create_symlink() -> bool {
     }
 }
 
-fn can_run_bun_serve() -> bool {
-    let status = ProcessCommand::new("bun")
+fn can_run_pnpm_serve() -> bool {
+    let status = ProcessCommand::new("pnpm")
         .args(["run", "serve", "--", "--version"])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -194,8 +194,8 @@ install_dir = "dev"
 
 #[test]
 fn prepare_artifacts_downloads_http_source() -> Result<(), Box<dyn std::error::Error>> {
-    if !can_run_bun_serve() {
-        eprintln!("bun run serve が利用できないためスキップします");
+    if !can_run_pnpm_serve() {
+        eprintln!("pnpm run serve が利用できないためスキップします");
         return Ok(());
     }
 

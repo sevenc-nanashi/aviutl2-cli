@@ -91,3 +91,83 @@ install_dir = "devdir"
 
     Ok(())
 }
+
+#[test]
+fn e2e_catalog_writes_catalog_json() -> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempdir()?;
+    let project_dir = temp.path().join("catalog_project");
+    fs::create_dir_all(&project_dir)?;
+    fs::create_dir_all(project_dir.join("dist"))?;
+    write_file(
+        &project_dir.join("dist").join("plugin.auf"),
+        "dummy-binary-content",
+    )?;
+
+    let config_path = project_dir.join("aviutl2.toml");
+    write_file(
+        &config_path,
+        r#"[project]
+name = "catalog-project"
+version = "1.2.3"
+
+[artifacts.plugin]
+source = "dist/plugin.auf"
+destination = "Plugin/plugin.auf"
+placement_method = "copy"
+
+[catalog]
+id = "my-plugin"
+name = "My Plugin"
+type = "filter"
+author = "nanashi"
+summary = "summary"
+homepage = "https://example.com"
+description = "desc"
+
+[catalog.license]
+type = "cc0"
+
+[catalog.download_source]
+type = "github"
+owner = "sevenc-nanashi"
+repo = "aviutl2-cli"
+"#,
+    )?;
+
+    Command::new(assert_cmd::cargo::cargo_bin!("au2"))
+        .current_dir(&project_dir)
+        .arg("catalog")
+        .assert()
+        .success();
+
+    let catalog_json_path = project_dir.join(".aviutl2-cli").join("catalog.json");
+    assert!(catalog_json_path.exists());
+    let content = fs::read_to_string(&catalog_json_path)?;
+    let json: serde_json::Value = serde_json::from_str(&content)?;
+    assert_eq!(json[0]["id"], "my-plugin");
+    assert_eq!(
+        json[0]["installer"]["source"]["github"]["repo"],
+        "aviutl2-cli"
+    );
+    assert_eq!(
+        json[0]["installer"]["source"]["github"]["pattern"],
+        "^catalog-project-v[^/]+\\.au2pkg\\.zip$"
+    );
+    assert_eq!(json[0]["installer"]["install"][0]["action"], "download");
+    assert_eq!(json[0]["installer"]["install"][1]["action"], "extract");
+    assert_eq!(json[0]["installer"]["install"][2]["action"], "copy");
+    assert_eq!(json[0]["version"][0]["version"], "1.2.3");
+    assert_eq!(
+        json[0]["version"][0]["file"][0]["path"],
+        "Plugin/plugin.auf"
+    );
+    assert!(
+        json[0]["version"][0]["file"][0]["XXH3_128"]
+            .as_str()
+            .unwrap_or_default()
+            .len()
+            == 32
+    );
+
+    Ok(())
+}
