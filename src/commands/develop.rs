@@ -19,7 +19,12 @@ pub struct ResolvedBuild {
     pub group: Option<String>,
 }
 
-pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<()> {
+pub fn run(
+    profile: Option<String>,
+    skip_start: bool,
+    refresh: bool,
+    args: Vec<String>,
+) -> Result<()> {
     let config = load_config()?;
     let dev = config
         .development
@@ -55,6 +60,7 @@ pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<(
         if aviutl_exe.exists() {
             log::info!("AviUtl2 を起動します: {}", aviutl_exe.display());
             Command::new(aviutl_exe)
+                .args(args)
                 .spawn()
                 .with_context(|| "AviUtl2 の起動に失敗しました")?;
         } else {
