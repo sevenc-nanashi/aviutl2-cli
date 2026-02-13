@@ -209,6 +209,8 @@ model Catalog {
   uninstall_steps?: CatalogAction[];
 }
 
+alias CatalogLicenseText = { type: "inline", content: string } | { type: "file", path: string };
+
 model TemplateCatalogLicense {
   /** ライセンスの種類 */
   type: "MIT" | "Apache-2.0" | "BSD-2-Clause" | "BSD-3-Clause";
@@ -225,18 +227,18 @@ model TemplateCatalogLicense {
 
 model CustomCatalogLicense {
   /** ライセンスの種類 */
-  type: "mit" | "apache-2.0" | "bsd-2-clause" | "bsd-3-clause";
+  type: "MIT" | "Apache-2.0" | "BSD-2-Clause" | "BSD-3-Clause";
 
   /** テンプレートを使用するかどうか */
   template: false;
 
   /** ライセンスの全文 */
-  text: string;
+  text: CatalogLicenseText;
 }
 
 model CC0License {
   /** ライセンスの種類 */
-  type: "cc0";
+  type: "CC0-1.0";
 }
 
 model OtherCatalogLicense {
@@ -247,7 +249,7 @@ model OtherCatalogLicense {
   name?: "custom" | string;
 
   /** ライセンスの全文 */
-  text: string;
+  text: CatalogLicenseText;
 }
 
 model UnknownCatalogLicense {

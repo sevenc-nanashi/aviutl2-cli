@@ -19,6 +19,7 @@ fs-err = "3.2.2"
 log = "0.4.29"
 pathdiff = "0.2.3"
 serde = { version = "1.0.228", features = ["derive"] }
+serde-constant = "0.1.0"
 serde_json = "1.0.145"
 time = { version = "0.3.44", features = ["formatting"] }
 toml = "0.9.11"

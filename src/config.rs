@@ -121,6 +121,13 @@ pub enum CatalogType {
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum CatalogLicenseText {
+    Inline { content: String },
+    File { path: String },
+}
+
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum CatalogDescription {
     Plain(String),
@@ -163,7 +170,7 @@ pub enum CatalogLicense {
 pub struct TemplateCatalogLicense {
     #[serde(rename = "type")]
     pub license_type: TemplateCatalogLicenseType,
-    pub template: bool,
+    pub template: serde_constant::ConstBool<true>,
     pub author: String,
     pub year: String,
 }
@@ -171,9 +178,9 @@ pub struct TemplateCatalogLicense {
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
 pub struct CustomCatalogLicense {
     #[serde(rename = "type")]
-    pub license_type: CustomCatalogLicenseType,
-    pub template: bool,
-    pub text: String,
+    pub license_type: TemplateCatalogLicenseType,
+    pub template: serde_constant::ConstBool<false>,
+    pub text: CatalogLicenseText,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
@@ -187,7 +194,7 @@ pub struct OtherCatalogLicense {
     #[serde(rename = "type")]
     pub license_type: OtherCatalogLicenseType,
     pub name: Option<String>,
-    pub text: String,
+    pub text: CatalogLicenseText,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
@@ -209,20 +216,8 @@ pub enum TemplateCatalogLicenseType {
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
-pub enum CustomCatalogLicenseType {
-    #[serde(rename = "mit")]
-    Mit,
-    #[serde(rename = "apache-2.0")]
-    Apache20,
-    #[serde(rename = "bsd-2-clause")]
-    Bsd2Clause,
-    #[serde(rename = "bsd-3-clause")]
-    Bsd3Clause,
-}
-
-#[derive(Deserialize, Serialize, Clone, PartialEq)]
 pub enum CC0LicenseType {
-    #[serde(rename = "cc0")]
+    #[serde(rename = "CC0-1.0")]
     Cc0,
 }
 

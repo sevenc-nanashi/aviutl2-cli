@@ -89,7 +89,4 @@ pub enum Commands {
         #[arg(short, long)]
         refresh: bool,
     },
-
-    /// catalog 設定から catalog.json を生成します
-    Catalog,
 }

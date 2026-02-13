@@ -134,6 +134,8 @@ pub struct CatalogEntry {
     pub summary: String,
     pub description: String,
     pub author: String,
+    #[serde(rename = "originalAuthor")]
+    pub original_author: Option<String>,
 
     #[serde(rename = "repoURL")]
     pub repo_url: String,

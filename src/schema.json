@@ -478,7 +478,7 @@
               ]
             }
           ],
-          "description": "インストーラーのダウンロードソース（installer.source 相当）"
+          "description": "ダウンロード元"
         },
         "install_steps": {
           "type": "array",
@@ -491,9 +491,6 @@
                 "$ref": "#/$defs/CatalogActionExtract"
               },
               {
-                "$ref": "#/$defs/CatalogActionExtractSfx"
-              },
-              {
                 "$ref": "#/$defs/CatalogActionCopy"
               },
               {
@@ -501,13 +498,10 @@
               },
               {
                 "$ref": "#/$defs/CatalogActionRun"
-              },
-              {
-                "$ref": "#/$defs/CatalogActionRunAuoSetup"
               }
             ]
           },
-          "description": "インストール手順（installer.install 相当）"
+          "description": "インストール手順（省略すると自動生成）"
         },
         "uninstall_steps": {
           "type": "array",
@@ -520,9 +514,6 @@
                 "$ref": "#/$defs/CatalogActionExtract"
               },
               {
-                "$ref": "#/$defs/CatalogActionExtractSfx"
-              },
-              {
                 "$ref": "#/$defs/CatalogActionCopy"
               },
               {
@@ -530,13 +521,10 @@
               },
               {
                 "$ref": "#/$defs/CatalogActionRun"
-              },
-              {
-                "$ref": "#/$defs/CatalogActionRunAuoSetup"
               }
             ]
           },
-          "description": "アンインストール手順（installer.uninstall 相当）"
+          "description": "アンインストール手順（省略すると自動生成）"
         }
       },
       "required": [
@@ -648,19 +636,19 @@
           "anyOf": [
             {
               "type": "string",
-              "const": "mit"
+              "const": "MIT"
             },
             {
               "type": "string",
-              "const": "apache-2.0"
+              "const": "Apache-2.0"
             },
             {
               "type": "string",
-              "const": "bsd-2-clause"
+              "const": "BSD-2-Clause"
             },
             {
               "type": "string",
-              "const": "bsd-3-clause"
+              "const": "BSD-3-Clause"
             }
           ],
           "description": "ライセンスの種類"
@@ -671,7 +659,40 @@
           "description": "テンプレートを使用するかどうか"
         },
         "text": {
-          "type": "string",
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "inline"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "content"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "file"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "path"
+              ]
+            }
+          ],
           "description": "ライセンスの全文"
         }
       },
@@ -686,7 +707,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "const": "cc0",
+          "const": "CC0-1.0",
           "description": "ライセンスの種類"
         }
       },
@@ -725,18 +746,6 @@
         "action": {
           "type": "string",
           "const": "extract"
-        }
-      },
-      "required": [
-        "action"
-      ]
-    },
-    "CatalogActionExtractSfx": {
-      "type": "object",
-      "properties": {
-        "action": {
-          "type": "string",
-          "const": "extract_sfx"
         }
       },
       "required": [
@@ -803,22 +812,6 @@
         "action",
         "path",
         "args"
-      ]
-    },
-    "CatalogActionRunAuoSetup": {
-      "type": "object",
-      "properties": {
-        "action": {
-          "type": "string",
-          "const": "run_auo_setup"
-        },
-        "path": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "action",
-        "path"
       ]
     },
     "PlacementMethod": {
