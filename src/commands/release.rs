@@ -233,14 +233,8 @@ fn default_uninstall_steps(
     let mut actions = Vec::new();
     for action in install_steps.iter().rev() {
         if let catalog_schema::InstallerAction::Copy { to, from, .. } = action {
-            let file_path = PathBuf::from(to).join(
-                PathBuf::from(from)
-                    .file_name()
-                    .with_context(|| format!("ファイル名の取得に失敗しました: {}", from))?,
-            );
-            actions.push(catalog_schema::InstallerAction::Delete {
-                path: file_path.to_string_lossy().to_string(),
-            });
+            let file_path = format!("{}/{}", to, from.split('/').next_back().unwrap());
+            actions.push(catalog_schema::InstallerAction::Delete { path: file_path });
         }
     }
     Ok(actions)
