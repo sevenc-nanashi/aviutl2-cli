@@ -4,7 +4,12 @@ use std::process::Command;
 use crate::config::load_config;
 use crate::util::{copy_dir_contents, find_aviutl2_data_dir, preview_dir};
 
-pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<()> {
+pub fn run(
+    profile: Option<String>,
+    skip_start: bool,
+    refresh: bool,
+    args: Vec<String>,
+) -> Result<()> {
     let config = load_config()?;
     let preview = config.preview.as_ref().context("preview 設定が必要です")?;
     let release = config.release.as_ref().context("release 設定が必要です")?;
@@ -27,7 +32,7 @@ pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<(
     super::develop::run_optional_commands(preview.prebuild.as_ref(), config.build_group.as_ref())?;
     let mut artifacts =
         super::develop::resolve_artifacts(&config, Some(&profile), include, refresh)?;
-    artifacts.retain(|artifact| artifact.destination != std::path::PathBuf::from("preview.txt"));
+    artifacts.retain(|artifact| &artifact.destination != "preview.txt");
     let stage_dir =
         super::release::build_release_stage_from_artifacts(artifacts, None, &config.project)?;
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
@@ -40,6 +45,7 @@ pub fn run(profile: Option<String>, skip_start: bool, refresh: bool) -> Result<(
         if aviutl_exe.exists() {
             log::info!("AviUtl2 を起動します: {}", aviutl_exe.display());
             Command::new(aviutl_exe)
+                .args(&args)
                 .spawn()
                 .with_context(|| "AviUtl2 の起動に失敗しました")?;
         } else {

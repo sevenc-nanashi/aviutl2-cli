@@ -27,7 +27,8 @@ pub fn run(command: Commands) -> Result<()> {
             profile,
             skip_start,
             refresh,
-        } => develop::run(profile, skip_start, refresh),
+            args,
+        } => develop::run(profile, skip_start, refresh, args),
         Commands::PrepareSchema => schema::run(),
         Commands::Release {
             profile,
@@ -37,6 +38,7 @@ pub fn run(command: Commands) -> Result<()> {
             profile,
             skip_start,
             refresh,
-        } => preview::run(profile, skip_start, refresh),
+            args,
+        } => preview::run(profile, skip_start, refresh, args),
     }
 }

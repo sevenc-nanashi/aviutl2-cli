@@ -62,6 +62,9 @@ pub enum Commands {
         /// HTTP の成果物キャッシュを再取得します
         #[arg(short, long)]
         refresh: bool,
+
+        /// AviUtl2に渡す追加のコマンドライン引数
+        args: Vec<String>,
     },
 
     /// リリース用のパッケージを作成します
@@ -88,5 +91,8 @@ pub enum Commands {
         /// HTTP の成果物キャッシュを再取得します
         #[arg(short, long)]
         refresh: bool,
+
+        /// AviUtl2に渡す追加のコマンドライン引数
+        args: Vec<String>,
     },
 }
