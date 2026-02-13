@@ -101,7 +101,7 @@ jobs:
             echo "au2_path=./target/au2-v${{ github.event.inputs.version }}-linux" >> $GITHUB_OUTPUT
           fi
 
-          if [ "${{ inputs.version }}" = *"-"* ]; then
+          if [[ "${{ inputs.version }}" = *"-"* ]]; then
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
           else
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
