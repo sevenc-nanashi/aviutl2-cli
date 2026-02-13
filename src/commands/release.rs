@@ -250,7 +250,11 @@ fn to_catalog_relative_path(path: &std::path::Path) -> String {
     let normalized = normalize_path_separator(path);
     let trimmed = normalized.strip_prefix("./").unwrap_or(&normalized);
     let lowered = trimmed.to_lowercase();
-    if lowered.starts_with("plugin/") {
+    if lowered == "plugin" {
+        "{pluginsDir}".to_string()
+    } else if lowered == "script" {
+        "{scriptsDir}".to_string()
+    } else if lowered.starts_with("plugin/") {
         format!("{{pluginsDir}}/{}", &trimmed["plugin/".len()..])
     } else if lowered.starts_with("script/") {
         format!("{{scriptsDir}}/{}", &trimmed["script/".len()..])
