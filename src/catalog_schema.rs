@@ -169,6 +169,8 @@ pub enum CatalogEntryType {
     Modification,
     #[serde(rename = "スクリプト")]
     Script,
+    #[serde(rename = "その他")]
+    Other,
 }
 
 /* ---------- root ---------- */

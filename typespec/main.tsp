@@ -160,7 +160,8 @@ model Catalog {
     | "common"
     | "modification"
     | "script"
-    | "language";
+    | "language"
+    | "other";
 
   /** 作者名 */
   author: string;

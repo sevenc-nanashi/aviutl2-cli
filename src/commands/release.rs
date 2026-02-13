@@ -44,7 +44,9 @@ pub fn run(profile: Option<String>, set_version: Option<String>) -> Result<()> {
     super::develop::run_optional_commands(release.postbuild.as_ref(), config.build_group.as_ref())?;
 
     if let Some(catalog_config) = &config.catalog {
-        log::warn!("カタログ生成機能は実験的機能です。将来のバージョンで変更または削除される可能性があります。");
+        log::warn!(
+            "カタログ生成機能は実験的機能です。将来のバージョンで変更または削除される可能性があります。"
+        );
         let versions = build_versions(&config, &stage_dir)?;
         let generated_pattern =
             generate_au2pkg_pattern(&config.project, release.zip_name.as_deref());
@@ -272,6 +274,7 @@ fn map_catalog_type(catalog_type: &config::CatalogType) -> catalog_schema::Catal
         config::CatalogType::Modification => catalog_schema::CatalogEntryType::Modification,
         config::CatalogType::Script => catalog_schema::CatalogEntryType::Script,
         config::CatalogType::Language => catalog_schema::CatalogEntryType::Script,
+        config::CatalogType::Other => catalog_schema::CatalogEntryType::Other,
     }
 }
 

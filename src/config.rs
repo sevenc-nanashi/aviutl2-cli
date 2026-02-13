@@ -118,6 +118,7 @@ pub enum CatalogType {
     Modification,
     Script,
     Language,
+    Other,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
