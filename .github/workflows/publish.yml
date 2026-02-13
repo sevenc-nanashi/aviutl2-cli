@@ -101,10 +101,17 @@ jobs:
             echo "au2_path=./target/au2-v${{ github.event.inputs.version }}-linux" >> $GITHUB_OUTPUT
           fi
 
+          if [[ "${{ inputs.version }}" = *"-"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.version }}
+          prerelease: ${{ steps.prepare.outputs.is_prerelease }}
           fail_on_unmatched_files: true
           files: |
             ${{ steps.prepare.outputs.au2_path }}
