@@ -24,18 +24,9 @@ enabled = true
 
 [development]
 aviutl2_version = "latest"
-# prebuild = "echo prebuild"
-# postbuild = "echo postbuild"
-
-[preview]
-# aviutl2_version = "latest"
-# prebuild = "echo prebuild"
-# postbuild = "echo postbuild"
 
 [release]
 package_template = "package_template.txt"
-# prebuild = "echo prebuild"
-# postbuild = "echo postbuild"
 "#;
 
 pub fn run() -> Result<()> {
