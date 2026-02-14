@@ -21,6 +21,11 @@ cargo install aviutl2-cli
 
 設定は`aviutl2.toml`に記述します。`.config/aviutl2.toml`に配置することもできます。
 
+<details>
+<summary>aviutl2.toml の例</summary>
+
+詳細な仕様は[TypeSpec](./typespec/main.tsp)を参照してください。
+
 ```toml
 [project]
 # プロジェクト名
@@ -112,7 +117,39 @@ postbuild = "echo postbuild"
 
 # 含める成果物のリスト（省略時はすべて含める）
 include = ["my_plugin_aul2", "my_plugin_aux2"]
+
+# AviUtl2 カタログ用の情報
+# JSON入力で使えるデータを指定します。
+[catalog]
+# プラグインID
+id = "sevenc-nanashi.my-plugin"
+# プラグイン名
+name = "My AviUtl2 Plugin"
+# 作者名
+author = "Nanashi."
+# 種類
+# "common" / "effect" / "input" / "output" / "script" / "modification"
+type = "common"
+# パッケージのサイト
+homepage = "https://github.com/sevenc-nanashi/tinted-aviutl2"
+# ニコニ・コモンズID
+niconi_commons_id = "sm45904404"
+# タグ
+tags = ["UI"]
+# 概要
+summary = "ぼくのかんがえたさいきょうのAviUtl2プラグイン"
+
+# 詳細説明
+description = { type = "url", url = "https://raw.githubusercontent.com/sevenc-nanashi/tinted-aviutl2/main/README.md" }
+
+# ライセンス
+license = { type = "MIT", template = false, text = { type = "file", path = "./LICENSE" } }
+
+# ダウンロード元
+download_source = { type = "github", owner = "sevenc-nanashi", repo = "tinted-aviutl2" }
 ```
+
+</details>
 
 ## コマンド一覧
 

@@ -13,8 +13,8 @@
     },
     "build_group": {
       "type": "object",
-      "description": "ビルドコマンドのグループ定義",
       "properties": {},
+      "description": "ビルドコマンドのグループ定義",
       "additionalProperties": {
         "anyOf": [
           {
@@ -43,6 +43,10 @@
     "release": {
       "$ref": "#/$defs/Release",
       "description": "リリース用の設定"
+    },
+    "catalog": {
+      "$ref": "#/$defs/Catalog",
+      "description": "AviUtl2 カタログの定義"
     }
   },
   "required": [
@@ -73,6 +77,18 @@
       "additionalProperties": {
         "$ref": "#/$defs/Artifact"
       }
+    },
+    "BuildGroupRef": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "利用する build_group のキー"
+        }
+      },
+      "required": [
+        "group"
+      ]
     },
     "Development": {
       "type": "object",
@@ -248,6 +264,281 @@
         }
       }
     },
+    "Catalog": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "パッケージ名"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "output"
+            },
+            {
+              "type": "string",
+              "const": "input"
+            },
+            {
+              "type": "string",
+              "const": "filter"
+            },
+            {
+              "type": "string",
+              "const": "common"
+            },
+            {
+              "type": "string",
+              "const": "modification"
+            },
+            {
+              "type": "string",
+              "const": "script"
+            },
+            {
+              "type": "string",
+              "const": "language"
+            }
+          ],
+          "description": "種類"
+        },
+        "author": {
+          "type": "string",
+          "description": "作者名"
+        },
+        "original_author": {
+          "type": "string",
+          "description": "オリジナル作者名"
+        },
+        "niconi_commons_id": {
+          "type": "string",
+          "description": "ニコニ・コモンズID"
+        },
+        "summary": {
+          "type": "string",
+          "description": "概要"
+        },
+        "homepage": {
+          "type": "string",
+          "description": "パッケージのサイト"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "依存パッケージ（未使用）"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "タグ"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "url"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "URL"
+                }
+              },
+              "required": [
+                "type",
+                "url"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "inline"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Markdown 形式の内容"
+                }
+              },
+              "required": [
+                "type",
+                "content"
+              ]
+            }
+          ],
+          "description": "説明"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TemplateCatalogLicense"
+            },
+            {
+              "$ref": "#/$defs/CustomCatalogLicense"
+            },
+            {
+              "$ref": "#/$defs/CC0License"
+            },
+            {
+              "$ref": "#/$defs/CustomCatalogLicense"
+            },
+            {
+              "$ref": "#/$defs/UnknownCatalogLicense"
+            }
+          ],
+          "description": "ライセンス情報"
+        },
+        "download_source": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "direct"
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "url"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "booth"
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "url"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "github"
+                },
+                "owner": {
+                  "type": "string"
+                },
+                "repo": {
+                  "type": "string"
+                },
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "owner",
+                "repo"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "google_drive"
+                },
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "id"
+              ]
+            }
+          ],
+          "description": "ダウンロード元"
+        },
+        "install_steps": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CatalogActionDownload"
+              },
+              {
+                "$ref": "#/$defs/CatalogActionExtract"
+              },
+              {
+                "$ref": "#/$defs/CatalogActionCopy"
+              },
+              {
+                "$ref": "#/$defs/CatalogActionDelete"
+              },
+              {
+                "$ref": "#/$defs/CatalogActionRun"
+              }
+            ]
+          },
+          "description": "インストール手順（省略すると自動生成）"
+        },
+        "uninstall_steps": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CatalogActionDownload"
+              },
+              {
+                "$ref": "#/$defs/CatalogActionExtract"
+              },
+              {
+                "$ref": "#/$defs/CatalogActionCopy"
+              },
+              {
+                "$ref": "#/$defs/CatalogActionDelete"
+              },
+              {
+                "$ref": "#/$defs/CatalogActionRun"
+              }
+            ]
+          },
+          "description": "アンインストール手順（省略すると自動生成）"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "author",
+        "summary",
+        "homepage",
+        "description",
+        "license",
+        "download_source"
+      ]
+    },
     "Artifact": {
       "type": "object",
       "properties": {
@@ -293,23 +584,241 @@
         "destination"
       ]
     },
+    "TemplateCatalogLicense": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "MIT"
+            },
+            {
+              "type": "string",
+              "const": "Apache-2.0"
+            },
+            {
+              "type": "string",
+              "const": "BSD-2-Clause"
+            },
+            {
+              "type": "string",
+              "const": "BSD-3-Clause"
+            }
+          ],
+          "description": "ライセンスの種類"
+        },
+        "template": {
+          "type": "boolean",
+          "const": true,
+          "description": "テンプレートを使用するかどうか"
+        },
+        "author": {
+          "type": "string",
+          "description": "著作者"
+        },
+        "year": {
+          "type": "string",
+          "description": "年"
+        }
+      },
+      "required": [
+        "type",
+        "template",
+        "author",
+        "year"
+      ]
+    },
+    "CustomCatalogLicense": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "MIT"
+            },
+            {
+              "type": "string",
+              "const": "Apache-2.0"
+            },
+            {
+              "type": "string",
+              "const": "BSD-2-Clause"
+            },
+            {
+              "type": "string",
+              "const": "BSD-3-Clause"
+            }
+          ],
+          "description": "ライセンスの種類"
+        },
+        "template": {
+          "type": "boolean",
+          "const": false,
+          "description": "テンプレートを使用するかどうか"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "inline"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "content"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "file"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "path"
+              ]
+            }
+          ],
+          "description": "ライセンスの全文"
+        }
+      },
+      "required": [
+        "type",
+        "template",
+        "text"
+      ]
+    },
+    "CC0License": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "CC0-1.0",
+          "description": "ライセンスの種類"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "UnknownCatalogLicense": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "unknown",
+          "description": "ライセンスの種類"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "CatalogActionDownload": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "const": "download"
+        }
+      },
+      "required": [
+        "action"
+      ]
+    },
+    "CatalogActionExtract": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "const": "extract"
+        }
+      },
+      "required": [
+        "action"
+      ]
+    },
+    "CatalogActionCopy": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "const": "copy"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "from",
+        "to"
+      ]
+    },
+    "CatalogActionDelete": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "const": "delete"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "path"
+      ]
+    },
+    "CatalogActionRun": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "const": "run"
+        },
+        "path": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "elevate": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "action",
+        "path",
+        "args"
+      ]
+    },
     "PlacementMethod": {
       "type": "string",
       "enum": [
         "symlink",
         "copy"
-      ]
-    },
-    "BuildGroupRef": {
-      "type": "object",
-      "properties": {
-        "group": {
-          "type": "string",
-          "description": "利用する build_group のキー"
-        }
-      },
-      "required": [
-        "group"
       ]
     },
     "RecordArtifactProfile": {

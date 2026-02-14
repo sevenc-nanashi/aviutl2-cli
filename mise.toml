@@ -1,3 +1,4 @@
 [tools]
-bun = "latest"
 "cargo:cargo-edit" = "latest"
+node = "24"
+pnpm = "latest"

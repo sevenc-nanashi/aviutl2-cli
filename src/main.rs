@@ -1,3 +1,4 @@
+mod catalog_schema;
 mod cli;
 mod commands;
 mod config;
