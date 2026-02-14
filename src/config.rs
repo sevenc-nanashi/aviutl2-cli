@@ -108,8 +108,7 @@ pub struct Catalog {
     pub uninstall_steps: Option<Vec<CatalogAction>>,
 }
 
-#[derive(Deserialize, Serialize, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Clone, PartialEq)]
 pub enum CatalogType {
     Output,
     Input,
@@ -119,7 +118,49 @@ pub enum CatalogType {
     Script,
     Language,
     Other,
+    Custom(String),
 }
+
+impl<'de> Deserialize<'de> for CatalogType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        let catalog_type = match s.as_str() {
+            "output" => CatalogType::Output,
+            "input" => CatalogType::Input,
+            "filter" => CatalogType::Filter,
+            "common" => CatalogType::Common,
+            "modification" => CatalogType::Modification,
+            "script" => CatalogType::Script,
+            "language" => CatalogType::Language,
+            "other" => CatalogType::Other,
+            custom => CatalogType::Custom(custom.to_string()),
+        };
+        Ok(catalog_type)
+    }
+}
+impl Serialize for CatalogType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let s = match self {
+            CatalogType::Output => "output",
+            CatalogType::Input => "input",
+            CatalogType::Filter => "filter",
+            CatalogType::Common => "common",
+            CatalogType::Modification => "modification",
+            CatalogType::Script => "script",
+            CatalogType::Language => "language",
+            CatalogType::Other => "other",
+            CatalogType::Custom(custom) => custom.as_str(),
+        };
+        serializer.serialize_str(s)
+    }
+}
+
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
 #[serde(tag = "type", rename_all = "snake_case")]

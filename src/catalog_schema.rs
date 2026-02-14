@@ -153,24 +153,56 @@ pub struct CatalogEntry {
     pub version: Vec<Version>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum CatalogEntryType {
-    #[serde(rename = "本体")]
     AviUtl2,
-    #[serde(rename = "出力プラグイン")]
     Output,
-    #[serde(rename = "入力プラグイン")]
     Input,
-    #[serde(rename = "フィルタプラグイン")]
     Filter,
-    #[serde(rename = "汎用プラグイン")]
     Common,
-    #[serde(rename = "MOD")]
     Modification,
-    #[serde(rename = "スクリプト")]
     Script,
-    #[serde(rename = "その他")]
     Other,
+
+    Custom(String),
+}
+impl<'de> Deserialize<'de> for CatalogEntryType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(match s.as_str() {
+            "本体" => CatalogEntryType::AviUtl2,
+            "出力プラグイン" => CatalogEntryType::Output,
+            "入力プラグイン" => CatalogEntryType::Input,
+            "フィルタプラグイン" => CatalogEntryType::Filter,
+            "汎用プラグイン" => CatalogEntryType::Common,
+            "MOD" => CatalogEntryType::Modification,
+            "スクリプト" => CatalogEntryType::Script,
+            "その他" => CatalogEntryType::Other,
+            custom => CatalogEntryType::Custom(custom.to_string()),
+        })
+    }
+}
+impl Serialize for CatalogEntryType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let s = match self {
+            CatalogEntryType::AviUtl2 => "本体",
+            CatalogEntryType::Output => "出力プラグイン",
+            CatalogEntryType::Input => "入力プラグイン",
+            CatalogEntryType::Filter => "フィルタプラグイン",
+            CatalogEntryType::Common => "汎用プラグイン",
+            CatalogEntryType::Modification => "MOD",
+            CatalogEntryType::Script => "スクリプト",
+            CatalogEntryType::Other => "その他",
+            CatalogEntryType::Custom(custom) => custom.as_str(),
+        };
+        serializer.serialize_str(s)
+    }
 }
 
 /* ---------- root ---------- */

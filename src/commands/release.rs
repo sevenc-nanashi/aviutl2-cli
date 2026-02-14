@@ -275,6 +275,9 @@ fn map_catalog_type(catalog_type: &config::CatalogType) -> catalog_schema::Catal
         config::CatalogType::Script => catalog_schema::CatalogEntryType::Script,
         config::CatalogType::Language => catalog_schema::CatalogEntryType::Script,
         config::CatalogType::Other => catalog_schema::CatalogEntryType::Other,
+        config::CatalogType::Custom(custom) => {
+            catalog_schema::CatalogEntryType::Custom(custom.clone())
+        }
     }
 }
 
