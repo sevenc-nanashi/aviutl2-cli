@@ -1,6 +1,6 @@
 [package]
 name = "aviutl2-cli"
-version = "0.5.0-preview.2"
+version = "0.5.0-preview.3"
 edition = "2024"
 authors = ["Nanashi. <sevenc7c.com>"]
 license = "MIT"
