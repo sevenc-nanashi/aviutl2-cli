@@ -7,6 +7,7 @@ AviUtl2のプラグイン・スクリプト開発に便利なコマンドライ�
 ビルド済みバイナリは[Releases](https://github.com/sevenc-nanashi/aviutl2-cli/releases/latest)からダウンロードできます：
 
 ```toml
+# mise.toml の例
 [tools]
 "github:sevenc-nanashi/aviutl2-cli" = { version = "latest", bin = "au2.exe" }
 ```
