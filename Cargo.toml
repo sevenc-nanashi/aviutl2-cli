@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "./companion", "companion"]
+
 [package]
 name = "aviutl2-cli"
 version = "0.7.0"

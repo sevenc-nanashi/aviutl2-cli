@@ -1,0 +1,12 @@
+[package]
+name = "companion"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "aviutl2_cli_companion"
+crate-type = ["cdylib"]
+
+[dependencies]
+aviutl2 = "0.20.2"
+process_path = "0.1.4"

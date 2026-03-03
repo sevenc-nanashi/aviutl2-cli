@@ -1,0 +1,20 @@
+#:schema ./.aviutl2-cli/aviutl2.schema.json
+# 設定ファイルについては https://github.com/sevenc-nanashi/aviutl2-cli を参照してください。
+[project]
+id = "sevenc-nanashi.aviutl2_cli_companion"
+name = "companion"
+version = "0.1.0"
+
+[development]
+aviutl2_version = "latest"
+
+[artifacts.aviutl2_cli_companion-aux2]
+destination = "Plugin/aviutl2_cli_companion.aux2"
+
+[artifacts.aviutl2_cli_companion-aux2.profiles.debug]
+build = "cargo build"
+source = "../target/debug/aviutl2_cli_companion.dll"
+
+[artifacts.aviutl2_cli_companion-aux2.profiles.release]
+build = "cargo build --release"
+source = "../target/release/aviutl2_cli_companion.dll"

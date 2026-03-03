@@ -36,6 +36,9 @@ pub fn run(
         .as_deref()
         .or(dev.profile.as_deref())
         .unwrap_or("debug");
+
+    let do_restart = shutdown_existing_aviutl2_instance(&install_dir)?;
+
     run_optional_commands(dev.prebuild.as_ref(), &config.build_group)?;
     let artifacts = resolve_artifacts(&config, Some(profile), None, refresh)?;
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
@@ -58,16 +61,55 @@ pub fn run(
     if !skip_start {
         let aviutl_exe = data_dir.parent().unwrap_or(&data_dir).join("aviutl2.exe");
         if aviutl_exe.exists() {
-            log::info!("AviUtl2 を起動します: {}", aviutl_exe.display());
-            Command::new(aviutl_exe)
-                .args(args)
-                .spawn()
-                .with_context(|| "AviUtl2 の起動に失敗しました")?;
+            if do_restart {
+                log::info!("AviUtl2 を再起動します。");
+                Command::new(aviutl_exe)
+                    .arg("-restart")
+                    .args(args)
+                    .spawn()
+                    .with_context(|| "AviUtl2 の再起動に失敗しました")?;
+            } else {
+                log::info!("AviUtl2 を起動します: {}", aviutl_exe.display());
+                Command::new(aviutl_exe)
+                    .args(args)
+                    .spawn()
+                    .with_context(|| "AviUtl2 の起動に失敗しました")?;
+            }
         } else {
             log::warn!("AviUtl2.exe が見つかりません: {}", aviutl_exe.display());
         }
     }
     Ok(())
+}
+
+fn shutdown_existing_aviutl2_instance(install_dir: &std::path::Path) -> Result<bool> {
+    let lock_path = install_dir
+        .join("aviutl2-cli-companion")
+        .join("process.lock");
+    if !lock_path.exists() {
+        return Ok(false);
+    }
+
+    let flag_path = install_dir
+        .join("aviutl2-cli-companion")
+        .join("restart_flag.txt");
+    std::fs::write(&flag_path, "restart")?;
+    log::info!("既存の AviUtl2 インスタンスに再起動を要求しました。");
+    for _ in 0..30 {
+        let try_lock = std::fs::OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .open(&lock_path)
+            .with_context(|| format!("Failed to open lock file: {}", lock_path.display()))?;
+        if try_lock.try_lock().is_ok() {
+            log::info!("既存の AviUtl2 インスタンスが終了しました。");
+            return Ok(true);
+        }
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+
+    bail!("既存の AviUtl2 インスタンスが終了しませんでした。手動で終了してください。");
 }
 
 fn warn_if_prepare_snapshot_changed(config: &Config, aviutl2_version: &str) -> Result<()> {
