@@ -153,6 +153,41 @@ pub struct CatalogEntry {
     pub version: Vec<Version>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CatalogIndexEntry {
+    pub id: String,
+    pub name: String,
+
+    #[serde(rename = "type")]
+    pub entry_type: CatalogEntryType,
+
+    pub summary: String,
+    pub description: String,
+    pub author: String,
+    #[serde(rename = "originalAuthor")]
+    pub original_author: Option<String>,
+
+    #[serde(rename = "repoURL")]
+    pub repo_url: String,
+
+    pub licenses: Vec<License>,
+
+    #[serde(rename = "niconiCommonsId")]
+    pub niconi_commons_id: Option<String>,
+
+    pub tags: Vec<String>,
+    pub dependencies: Vec<String>,
+    pub images: Vec<Image>,
+
+    pub installer: Installer,
+    pub version: Vec<Version>,
+
+    // extra fields
+
+    #[serde(rename = "latest-version")]
+    pub latest_version: String,
+}
+
 #[derive(Debug, Clone)]
 pub enum CatalogEntryType {
     AviUtl2,

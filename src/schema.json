@@ -638,10 +638,6 @@
         "id": {
           "type": "string",
           "description": "カタログからインストールするパッケージのID"
-        },
-        "version": {
-          "type": "string",
-          "description": "バージョン指定（省略時は最新）"
         }
       },
       "required": [

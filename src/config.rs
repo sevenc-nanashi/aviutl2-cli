@@ -421,7 +421,7 @@ pub enum CatalogAction {
     },
 }
 
-#[derive(Serialize, Clone, PartialEq)]
+#[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct CatalogDependency {
     pub id: String,
 }

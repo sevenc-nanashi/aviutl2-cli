@@ -47,6 +47,7 @@ pub fn run(
             anything_copied = true;
         }
     }
+
     if anything_copied {
         tracing::info!("成果物を配置しました");
     }
