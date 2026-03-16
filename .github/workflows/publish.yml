@@ -47,7 +47,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "release: v${{ steps.set_version.outputs.new_version }}"
           git tag ${{ steps.set_version.outputs.new_version }}
-          git bundle create release.bundle v${{ steps.set_version.outputs.new_version }} ${{ github.ref }}
+          git bundle create release.bundle ${{ steps.set_version.outputs.new_version }} ${{ github.ref }}
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v7
@@ -148,7 +148,7 @@ jobs:
           name: release-bundle
 
       - name: Unpack release bundle
-        run: git bundle unbundle release.bundle
+        run: git fetch ./release.bundle refs/tags/*:refs/tags/* ${{ github.ref }}
 
       - name: Set up Rust
         shell: bash
