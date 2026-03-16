@@ -103,6 +103,9 @@ model Development {
 
   /** 事後ビルドコマンド */
   postbuild?: BuildCommand;
+
+  /** カタログからインストールするパッケージのリスト */
+  catalog_dependencies?: CatalogDependency[];
 }
 
 model Preview {
@@ -123,6 +126,18 @@ model Preview {
 
   /** 事後ビルドコマンド */
   postbuild?: BuildCommand;
+
+  /** カタログからインストールするパッケージのリスト */
+  catalog_dependencies?: CatalogDependency[];
+}
+
+alias CatalogDependency = string | VerboseCatalogDependency;
+
+model VerboseCatalogDependency {
+  /** カタログからインストールするパッケージのID */
+  id: string;
+
+  // 将来のために予約...
 }
 
 model Release {

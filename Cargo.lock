@@ -119,6 +119,7 @@ dependencies = [
  "insta",
  "pathdiff",
  "predicates",
+ "regex",
  "serde",
  "serde-constant",
  "serde_json",

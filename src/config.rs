@@ -80,6 +80,8 @@ pub struct Development {
     pub prebuild: BuildCommand,
     #[serde(default)]
     pub postbuild: BuildCommand,
+    #[serde(default)]
+    pub catalog_dependencies: Vec<CatalogDependency>,
 }
 
 impl Development {
@@ -104,6 +106,8 @@ pub struct Preview {
     pub prebuild: BuildCommand,
     #[serde(default)]
     pub postbuild: BuildCommand,
+    #[serde(default)]
+    pub catalog_dependencies: Vec<CatalogDependency>,
 }
 
 impl Default for Preview {
@@ -115,6 +119,7 @@ impl Default for Preview {
             include: None,
             prebuild: BuildCommand::default(),
             postbuild: BuildCommand::default(),
+            catalog_dependencies: Vec::new(),
         }
     }
 }
@@ -414,6 +419,32 @@ pub enum CatalogAction {
         args: Vec<String>,
         elevate: Option<bool>,
     },
+}
+
+#[derive(Serialize, Clone, PartialEq)]
+pub struct CatalogDependency {
+    pub id: String,
+}
+
+impl<'de> Deserialize<'de> for CatalogDependency {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum CatalogDependencyDef {
+            Simple(String),
+            Detailed { id: String },
+        }
+
+        let def = CatalogDependencyDef::deserialize(deserializer)?;
+        let dependency = match def {
+            CatalogDependencyDef::Simple(id) => CatalogDependency { id },
+            CatalogDependencyDef::Detailed { id } => CatalogDependency { id },
+        };
+        Ok(dependency)
+    }
 }
 
 pub fn load_config() -> Result<Config> {
