@@ -204,6 +204,9 @@ jobs:
           files: |
             ./release-artifacts/au2-*
 
+      - name: Clean up release artifacts
+        run: rm -rf ./release-artifacts
+
       - name: Login to crates.io
         uses: rust-lang/crates-io-auth-action@v1
         id: crates-io-auth
