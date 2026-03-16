@@ -7,6 +7,10 @@ on:
         description: "Version to release"
         required: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   bump-version:
     runs-on: ubuntu-latest
@@ -47,13 +51,19 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "release: v${{ steps.set_version.outputs.new_version }}"
           git tag ${{ steps.set_version.outputs.new_version }}
-          git bundle create release.bundle ${{ steps.set_version.outputs.new_version }} ${{ github.ref }}
+          TAG_SHA=$(git rev-parse --short HEAD)
+          git bundle create release.bundle ${{ steps.set_version.outputs.new_version }} $TAG_SHA
+          echo "$TAG_SHA" > tag_sha.txt
+          echo "${{ steps.set_version.outputs.new_version }}" > version.txt
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v7
         with:
           name: release-bundle
-          path: release.bundle
+          path: |
+            release.bundle
+            tag_sha.txt
+            version.txt
 
   build:
     strategy:
@@ -78,7 +88,11 @@ jobs:
           name: release-bundle
 
       - name: Unpack release bundle
-        run: git fetch ./release.bundle refs/tags/*:refs/tags/* ${{ github.ref }}
+        run: |
+          TAG_SHA=$(cat tag_sha.txt)
+          VERSION=$(cat version.txt)
+          git fetch ./release.bundle $TAG_SHA refs/tags/$VERSION
+          git checkout $TAG_SHA
 
       - name: Set up Rust
         shell: bash
@@ -148,7 +162,11 @@ jobs:
           name: release-bundle
 
       - name: Unpack release bundle
-        run: git fetch ./release.bundle refs/tags/*:refs/tags/* ${{ github.ref }}
+        run: |
+          TAG_SHA=$(cat tag_sha.txt)
+          VERSION=$(cat version.txt)
+          git fetch ./release.bundle $TAG_SHA refs/tags/$VERSION
+          git checkout $TAG_SHA
 
       - name: Set up Rust
         shell: bash
