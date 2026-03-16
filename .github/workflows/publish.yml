@@ -30,7 +30,7 @@ jobs:
           tool: cargo-binstall
 
       - name: Set up mise
-        uses: jdx/mise-action@v3
+        uses: jdx/mise-action@v4
         with:
           install: true
           experimental: true
@@ -47,7 +47,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "release: v${{ steps.set_version.outputs.new_version }}"
           git tag ${{ steps.set_version.outputs.new_version }}
-          git push origin HEAD --tags
+          git bundle create release.bundle v${{ steps.set_version.outputs.new_version }} ${{ github.ref }}
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-bundle
+          path: release.bundle
 
   build:
     strategy:
@@ -65,9 +71,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Download release bundle
+        uses: actions/download-artifact@v8
         with:
-          submodules: "recursive"
-          ref: refs/tags/${{ github.event.inputs.version }}
+          name: release-bundle
+
+      - name: Unpack release bundle
+        run: git fetch ./release.bundle refs/tags/*:refs/tags/* ${{ github.ref }}
 
       - name: Set up Rust
         shell: bash
@@ -83,7 +94,7 @@ jobs:
           tool: cargo-binstall
 
       - name: Set up mise
-        uses: jdx/mise-action@v3
+        uses: jdx/mise-action@v4
         with:
           install: true
           experimental: true
@@ -107,14 +118,11 @@ jobs:
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v7
         with:
-          tag_name: ${{ github.event.inputs.version }}
-          prerelease: ${{ steps.prepare.outputs.is_prerelease }}
-          fail_on_unmatched_files: true
-          files: |
-            ${{ steps.prepare.outputs.au2_path }}
+          name: au2${{ matrix.prefix }}
+          path: ${{ steps.prepare.outputs.au2_path }}
   publish:
     needs: build
     runs-on: ubuntu-latest
@@ -126,9 +134,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Download executables
+        uses: actions/download-artifact@v8
         with:
-          submodules: "recursive"
-          ref: refs/tags/${{ github.event.inputs.version }}
+          pattern: au2-*
+          merge-multiple: true
+          path: ./release-artifacts
+
+      - name: Download release bundle
+        uses: actions/download-artifact@v8
+        with:
+          name: release-bundle
+
+      - name: Unpack release bundle
+        run: git bundle unbundle release.bundle
 
       - name: Set up Rust
         shell: bash
@@ -141,10 +161,23 @@ jobs:
           tool: cargo-binstall
 
       - name: Set up mise
-        uses: jdx/mise-action@v3
+        uses: jdx/mise-action@v4
         with:
           install: true
           experimental: true
+
+      - name: Push changes
+        run: |
+          git push origin --tags
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          prerelease: ${{ steps.prepare.outputs.is_prerelease }}
+          fail_on_unmatched_files: true
+          files: |
+            ./release-artifacts/au2-*
 
       - name: Login to crates.io
         uses: rust-lang/crates-io-auth-action@v1
