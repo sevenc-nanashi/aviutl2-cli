@@ -7,6 +7,10 @@ on:
         description: "Version to release"
         required: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   bump-version:
     runs-on: ubuntu-latest
@@ -47,13 +51,19 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "release: v${{ steps.set_version.outputs.new_version }}"
           git tag ${{ steps.set_version.outputs.new_version }}
-          git bundle create release.bundle --tags
+          TAG_SHA=$(git rev-parse HEAD)
+          git bundle create /tmp/release.bundle ${{ steps.set_version.outputs.new_version }} $TAG_SHA ${{ github.ref }}
+          echo "$TAG_SHA" > /tmp/tag_sha.txt
+          echo "${{ steps.set_version.outputs.new_version }}" > /tmp/version.txt
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v7
         with:
           name: release-bundle
-          path: release.bundle
+          path: |
+            /tmp/release.bundle
+            /tmp/tag_sha.txt
+            /tmp/version.txt
 
   build:
     strategy:
@@ -78,7 +88,12 @@ jobs:
           name: release-bundle
 
       - name: Unpack release bundle
-        run: git bundle unbundle release.bundle
+        run: |
+          TAG_SHA=$(cat tag_sha.txt)
+          VERSION=$(cat version.txt)
+          git fetch ./release.bundle refs/tags/$VERSION:refs/tags/$VERSION
+          git pull ./release.bundle $TAG_SHA
+          rm -rf ./release.bundle tag_sha.txt version.txt
 
       - name: Set up Rust
         shell: bash
@@ -94,7 +109,7 @@ jobs:
           tool: cargo-binstall
 
       - name: Set up mise
-        uses: jdx/mise-action@v3
+        uses: jdx/mise-action@v4
         with:
           install: true
           experimental: true
@@ -118,14 +133,11 @@ jobs:
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v7
         with:
-          tag_name: ${{ github.event.inputs.version }}
-          prerelease: ${{ steps.prepare.outputs.is_prerelease }}
-          fail_on_unmatched_files: true
-          files: |
-            ${{ steps.prepare.outputs.au2_path }}
+          name: au2${{ matrix.prefix }}
+          path: ${{ steps.prepare.outputs.au2_path }}
   publish:
     needs: build
     runs-on: ubuntu-latest
@@ -138,13 +150,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Download executables
+        uses: actions/download-artifact@v8
+        with:
+          pattern: au2-*
+          merge-multiple: true
+          path: ./release-artifacts
+
       - name: Download release bundle
         uses: actions/download-artifact@v8
         with:
           name: release-bundle
 
       - name: Unpack release bundle
-        run: git bundle unbundle release.bundle
+        run: |
+          TAG_SHA=$(cat tag_sha.txt)
+          VERSION=$(cat version.txt)
+          git fetch ./release.bundle refs/tags/$VERSION:refs/tags/$VERSION
+          git pull ./release.bundle $TAG_SHA
+          if [[ "$VERSION" = *"-"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          rm -rf ./release.bundle tag_sha.txt version.txt
 
       - name: Set up Rust
         shell: bash
@@ -165,6 +194,18 @@ jobs:
       - name: Push changes
         run: |
           git push origin --tags
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          prerelease: ${{ steps.prepare.outputs.is_prerelease }}
+          fail_on_unmatched_files: true
+          files: |
+            ./release-artifacts/au2-*
+
+      - name: Clean up release artifacts
+        run: rm -rf ./release-artifacts
 
       - name: Login to crates.io
         uses: rust-lang/crates-io-auth-action@v1
