@@ -126,10 +126,7 @@ pub fn artifacts(force: bool, profile: Option<String>, refresh: bool) -> Result<
         }
     }
 
-    let catalog = crate::catalog::load_catalog_index(
-        &std::path::PathBuf::from("catalog_index.json"),
-        refresh,
-    )?;
+    let catalog = crate::catalog::load_catalog_index(refresh)?;
     crate::catalog::sync(&data_dir, &catalog, &dev.catalog_dependencies)?;
 
     tracing::info!("成果物のシンボリックリンクを作成しました");

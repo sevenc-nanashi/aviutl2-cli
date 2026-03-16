@@ -35,10 +35,7 @@ pub fn run(
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
     copy_dir_contents(&stage_dir, &data_dir, true)?;
 
-    let catalog = crate::catalog::load_catalog_index(
-        &std::path::PathBuf::from("catalog_index.json"),
-        refresh,
-    )?;
+    let catalog = crate::catalog::load_catalog_index(refresh)?;
 
     tracing::info!("プレビュー用に成果物を配置しました");
     crate::catalog::sync(&data_dir, &catalog, &dev.catalog_dependencies)?;
