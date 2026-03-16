@@ -9,7 +9,7 @@ pub fn load_catalog_index(
     let path = std::path::PathBuf::from(".aviutl2-cli/catalog_index.json");
     if should_reload_catalog_index(&path, refresh) {
         tracing::info!("カタログを再読み込みします: {}", path.display());
-        let maybe_entries = fs::read_to_string(path)
+        let maybe_entries = fs::read_to_string(&path)
             .context("カタログの読み込みに失敗しました")
             .and_then(|content| {
                 serde_json::from_str::<std::collections::HashMap<String, CatalogIndexEntry>>(
