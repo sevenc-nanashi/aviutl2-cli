@@ -1,4 +1,7 @@
+[plugins]
+cargo-prebuilt = "https://github.com/sevenc-nanashi/mise-cargo-prebuilt"
+
 [tools]
-"cargo:cargo-edit" = "latest"
+"cargo-prebuilt:cargo-edit" = "latest"
 node = "24"
 pnpm = "latest"
