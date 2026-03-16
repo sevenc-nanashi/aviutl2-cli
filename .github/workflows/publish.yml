@@ -52,18 +52,18 @@ jobs:
           git commit -am "release: v${{ steps.set_version.outputs.new_version }}"
           git tag ${{ steps.set_version.outputs.new_version }}
           TAG_SHA=$(git rev-parse HEAD)
-          git bundle create release.bundle ${{ steps.set_version.outputs.new_version }} $TAG_SHA ${{ github.ref }}
-          echo "$TAG_SHA" > tag_sha.txt
-          echo "${{ steps.set_version.outputs.new_version }}" > version.txt
+          git bundle create /tmp/release.bundle ${{ steps.set_version.outputs.new_version }} $TAG_SHA ${{ github.ref }}
+          echo "$TAG_SHA" > /tmp/tag_sha.txt
+          echo "${{ steps.set_version.outputs.new_version }}" > /tmp/version.txt
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v7
         with:
           name: release-bundle
           path: |
-            release.bundle
-            tag_sha.txt
-            version.txt
+            /tmp/release.bundle
+            /tmp/tag_sha.txt
+            /tmp/version.txt
 
   build:
     strategy:
@@ -93,6 +93,7 @@ jobs:
           VERSION=$(cat version.txt)
           git fetch ./release.bundle refs/tags/$VERSION:refs/tags/$VERSION
           git pull ./release.bundle $TAG_SHA
+          rm -rf ./release.bundle tag_sha.txt version.txt
 
       - name: Set up Rust
         shell: bash
@@ -167,6 +168,12 @@ jobs:
           VERSION=$(cat version.txt)
           git fetch ./release.bundle refs/tags/$VERSION:refs/tags/$VERSION
           git pull ./release.bundle $TAG_SHA
+          if [[ "$VERSION" = *"-"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          rm -rf ./release.bundle tag_sha.txt version.txt
 
       - name: Set up Rust
         shell: bash
