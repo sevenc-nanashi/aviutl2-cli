@@ -51,7 +51,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "release: v${{ steps.set_version.outputs.new_version }}"
           git tag ${{ steps.set_version.outputs.new_version }}
-          TAG_SHA=$(git rev-parse --short HEAD)
+          TAG_SHA=$(git rev-parse HEAD)
           git bundle create release.bundle ${{ steps.set_version.outputs.new_version }} $TAG_SHA ${{ github.ref }}
           echo "$TAG_SHA" > tag_sha.txt
           echo "${{ steps.set_version.outputs.new_version }}" > version.txt
@@ -91,8 +91,8 @@ jobs:
         run: |
           TAG_SHA=$(cat tag_sha.txt)
           VERSION=$(cat version.txt)
-          git fetch ./release.bundle $TAG_SHA refs/tags/$VERSION ${{ github.ref }}
-          git checkout $TAG_SHA
+          git fetch ./release.bundle refs/tags/$VERSION:refs/tags/$VERSION
+          git pull ./release.bundle $TAG_SHA
 
       - name: Set up Rust
         shell: bash
@@ -165,8 +165,8 @@ jobs:
         run: |
           TAG_SHA=$(cat tag_sha.txt)
           VERSION=$(cat version.txt)
-          git fetch ./release.bundle $TAG_SHA refs/tags/$VERSION ${{ github.ref }}
-          git checkout $TAG_SHA
+          git fetch ./release.bundle refs/tags/$VERSION:refs/tags/$VERSION
+          git pull ./release.bundle $TAG_SHA
 
       - name: Set up Rust
         shell: bash
