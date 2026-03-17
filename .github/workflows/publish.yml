@@ -163,6 +163,7 @@ jobs:
           name: release-bundle
 
       - name: Unpack release bundle
+        id: prepare
         run: |
           TAG_SHA=$(cat tag_sha.txt)
           VERSION=$(cat version.txt)
