@@ -1,0 +1,31 @@
+name: Build Documentation Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: "recursive"
+
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          experimental: true
+
+      - name: Build documentation
+        run: |
+          pnpm run docs:build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        id: upload-doc
+        with:
+          name: preview-doc
+          path: ./.vitepress/build
