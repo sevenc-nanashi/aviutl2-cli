@@ -1,0 +1,33 @@
+name: Build Dev Version Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: "recursive"
+
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          experimental: true
+
+      - name: Build documentation
+        run: |
+          pnpm run docs:build
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.WORKERS_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "latest"
+          command: versions upload --preview-alias main
