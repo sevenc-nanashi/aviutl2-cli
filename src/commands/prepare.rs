@@ -8,8 +8,8 @@ use std::path::{Component, Path, PathBuf};
 
 use crate::config::{Artifact, ConfigLoadOpts, PlacementMethod, load_config};
 use crate::util::{
-    copy_to_destination, create_symlink, development_dir, extract_zip, find_aviutl2_data_dir,
-    prepare_snapshot_path, remove_path,
+    check_and_warn_symlink_capability, copy_to_destination, create_symlink, development_dir,
+    extract_zip, find_aviutl2_data_dir, prepare_snapshot_path, remove_path,
 };
 
 const API_BASE: &str = "https://api.aviutl2.jp";
@@ -96,6 +96,13 @@ pub fn artifacts(
     let profile = profile.as_deref().unwrap_or(&dev.profile);
     let artifacts = super::develop::resolve_artifacts(&config, Some(profile), None, refresh)?;
     let data_dir = find_aviutl2_data_dir(&install_dir)?;
+
+    let has_symlink_artifact = artifacts
+        .iter()
+        .any(|a| matches!(a.placement_method, PlacementMethod::Symlink));
+    if has_symlink_artifact {
+        check_and_warn_symlink_capability()?;
+    }
 
     for artifact in artifacts {
         let source = artifact.source;

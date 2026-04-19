@@ -353,6 +353,108 @@ pub fn prepare_snapshot_path() -> Result<PathBuf> {
     Ok(base)
 }
 
+pub fn symlink_check_path() -> Result<PathBuf> {
+    let mut base = cli_dir()?;
+    base.push("symlink-check");
+    Ok(base)
+}
+
+fn test_symlink_capability() -> bool {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::symlink_file;
+        let temp = match tempfile::tempdir() {
+            Ok(t) => t,
+            Err(_) => return false,
+        };
+        let source = temp.path().join("source.txt");
+        let dest = temp.path().join("dest.txt");
+        if std::fs::write(&source, b"probe").is_err() {
+            return false;
+        }
+        match symlink_file(&source, &dest) {
+            Ok(_) => true,
+            Err(err) => err.kind() != std::io::ErrorKind::PermissionDenied,
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        true
+    }
+}
+
+pub fn check_and_warn_symlink_capability() -> Result<()> {
+    let check_path = symlink_check_path()?;
+    check_and_warn_symlink_capability_at(&check_path)
+}
+
+fn check_and_warn_symlink_capability_at(check_path: &Path) -> Result<()> {
+    let available = if check_path.exists() {
+        let content = fs::read_to_string(check_path)?;
+        content.trim() == "ok"
+    } else {
+        let result = test_symlink_capability();
+        if let Some(parent) = check_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(check_path, if result { "ok" } else { "ng" })?;
+        result
+    };
+
+    if !available {
+        tracing::warn!(
+            "シンボリックリンクが使用できない環境です。Windows では開発者モードを有効にしてください。"
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn check_symlink_creates_flag_when_missing() -> anyhow::Result<()> {
+        let temp = tempdir()?;
+        let check_path = temp.path().join("symlink-check");
+
+        check_and_warn_symlink_capability_at(&check_path)?;
+
+        assert!(check_path.exists(), "flag file should be created");
+        #[cfg(not(windows))]
+        assert_eq!(
+            std::fs::read_to_string(&check_path)?.trim(),
+            "ok",
+            "on non-Windows symlinks are always available"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn check_symlink_reads_cached_ok_flag() -> anyhow::Result<()> {
+        let temp = tempdir()?;
+        let check_path = temp.path().join("symlink-check");
+        std::fs::write(&check_path, "ok")?;
+
+        check_and_warn_symlink_capability_at(&check_path)?;
+        assert_eq!(std::fs::read_to_string(&check_path)?.trim(), "ok");
+        Ok(())
+    }
+
+    #[test]
+    fn check_symlink_reads_cached_ng_flag() -> anyhow::Result<()> {
+        let temp = tempdir()?;
+        let check_path = temp.path().join("symlink-check");
+        std::fs::write(&check_path, "ng")?;
+
+        check_and_warn_symlink_capability_at(&check_path)?;
+        assert_eq!(std::fs::read_to_string(&check_path)?.trim(), "ng");
+        Ok(())
+    }
+}
+
 fn hash_url(url: &str) -> String {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     url.hash(&mut hasher);
