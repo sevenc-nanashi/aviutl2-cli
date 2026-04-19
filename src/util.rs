@@ -403,7 +403,7 @@ fn check_and_warn_symlink_capability_at(check_path: &Path) -> Result<()> {
 
     if !available {
         tracing::warn!(
-            "シンボリックリンクが使用できない環境です。Windows では開発者モードを有効にしてください。"
+            "シンボリックリンクが使用できない環境です。Windows の開発者モードを有効にしてください。"
         );
     }
 
