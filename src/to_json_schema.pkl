@@ -1,0 +1,4 @@
+import "package://pkg.pkl-lang.org/pkl-pantry/org.openapis.v3.contrib@1.0.3#/SchemaGenerator.pkl"
+import "./schema.pkl"
+
+output = SchemaGenerator.generate(schema).output

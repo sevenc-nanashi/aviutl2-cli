@@ -28,7 +28,14 @@ cargo install aviutl2-cli
 
 ## 設定
 
-設定は`aviutl2.toml`に記述します。`.config/aviutl2.toml`に配置することもできます。
+以下の設定フォーマットをサポートしています：
+- [`pkl`](https://pkl-lang.org)（`aviutl2.pkl`、`.config/aviutl2.pkl`）
+- TOML（`aviutl2.toml`、`.config/aviutl2.toml`）
+- JSON（`aviutl2.json`、`.config/aviutl2.json`）
+
+> [!NOTE]
+> デフォルトではpklは[pklr](https://github.com/jdx/pklr)を使用して処理されます。
+> `AU2_USE_PKL_CLI` 環境変数を設定すると、システムの `pkl` コマンドが使用されます。
 
 <details>
 <summary>aviutl2.toml の例</summary>

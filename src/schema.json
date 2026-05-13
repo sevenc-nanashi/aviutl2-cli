@@ -1,60 +1,11 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "aviutl2.config.schema.json",
   "type": "object",
+  "title": "schema",
   "properties": {
     "project": {
-      "$ref": "#/$defs/Project",
-      "description": "プロジェクト設定"
-    },
-    "artifacts": {
-      "$ref": "#/$defs/RecordArtifact",
-      "description": "成果物の定義"
-    },
-    "build_group": {
       "type": "object",
-      "properties": {},
-      "description": "ビルドコマンドのグループ定義",
-      "additionalProperties": {
-        "anyOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "$ref": "#/$defs/BuildGroupRef"
-          }
-        ]
-      }
-    },
-    "development": {
-      "$ref": "#/$defs/Development",
-      "description": "開発用の設定"
-    },
-    "preview": {
-      "$ref": "#/$defs/Preview",
-      "description": "プレビュー用の設定"
-    },
-    "release": {
-      "$ref": "#/$defs/Release",
-      "description": "リリース用の設定"
-    },
-    "catalog": {
-      "$ref": "#/$defs/Catalog",
-      "description": "AviUtl2 カタログの定義"
-    }
-  },
-  "required": [
-    "project"
-  ],
-  "$defs": {
-    "Project": {
-      "type": "object",
+      "title": "Project",
+      "description": "プロジェクト設定",
       "properties": {
         "id": {
           "type": "string",
@@ -69,33 +20,172 @@
           "description": "バージョン"
         }
       },
+      "additionalProperties": false,
       "required": [
         "id",
         "name",
         "version"
       ]
     },
-    "RecordArtifact": {
+    "artifacts": {
       "type": "object",
-      "properties": {},
+      "description": "成果物の定義",
       "additionalProperties": {
-        "$ref": "#/$defs/Artifact"
-      }
-    },
-    "BuildGroupRef": {
-      "type": "object",
-      "properties": {
-        "group": {
-          "type": "string",
-          "description": "利用する build_group のキー"
-        }
+        "type": "object",
+        "title": "Artifact",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "成果物の有効/無効（デフォルトは true）",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "description": "成果物のパス",
+            "nullable": true
+          },
+          "destination": {
+            "type": "string",
+            "description": "AviUtl2 の data 配下での配置先"
+          },
+          "build": {
+            "title": "BuildCommand",
+            "description": "ビルドコマンド",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "title": "BuildGroupRef",
+                "properties": {
+                  "group": {
+                    "type": "string",
+                    "description": "利用する build_group のキー"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "group"
+                ]
+              }
+            ],
+            "nullable": true
+          },
+          "placement_method": {
+            "type": "string",
+            "title": "PlacementMethod",
+            "description": "配置方法（symlink / copy）",
+            "enum": [
+              "symlink",
+              "copy"
+            ],
+            "nullable": true
+          },
+          "profiles": {
+            "type": "object",
+            "description": "プロファイルごとの設定",
+            "additionalProperties": {
+              "type": "object",
+              "title": "ArtifactProfile",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "成果物の有効/無効（デフォルトは true）",
+                  "nullable": true
+                },
+                "source": {
+                  "type": "string",
+                  "description": "成果物のパス",
+                  "nullable": true
+                },
+                "build": {
+                  "title": "BuildCommand",
+                  "description": "ビルドコマンド",
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "title": "BuildGroupRef",
+                      "properties": {
+                        "group": {
+                          "type": "string",
+                          "description": "利用する build_group のキー"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "required": [
+                        "group"
+                      ]
+                    }
+                  ],
+                  "nullable": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "destination"
+        ]
       },
-      "required": [
-        "group"
-      ]
+      "nullable": true
     },
-    "Development": {
+    "build_group": {
       "type": "object",
+      "description": "ビルドコマンドのグループ定義",
+      "additionalProperties": {
+        "title": "BuildCommand",
+        "description": "単一または複数のビルドコマンド",
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "object",
+            "title": "BuildGroupRef",
+            "properties": {
+              "group": {
+                "type": "string",
+                "description": "利用する build_group のキー"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "group"
+            ]
+          }
+        ]
+      },
+      "nullable": true
+    },
+    "development": {
+      "type": "object",
+      "title": "Development",
+      "description": "開発用の設定",
       "properties": {
         "aviutl2_version": {
           "type": "string",
@@ -103,14 +193,18 @@
         },
         "install_dir": {
           "type": "string",
-          "description": "AviUtl2 のインストール先"
+          "description": "AviUtl2 のインストール先",
+          "nullable": true
         },
         "profile": {
           "type": "string",
-          "description": "使うプロファイル名（デフォルトは debug）"
+          "description": "使うプロファイル名（デフォルトは debug）",
+          "nullable": true
         },
         "prebuild": {
-          "anyOf": [
+          "title": "BuildCommand",
+          "description": "事前ビルドコマンド",
+          "oneOf": [
             {
               "type": "string"
             },
@@ -121,13 +215,26 @@
               }
             },
             {
-              "$ref": "#/$defs/BuildGroupRef"
+              "type": "object",
+              "title": "BuildGroupRef",
+              "properties": {
+                "group": {
+                  "type": "string",
+                  "description": "利用する build_group のキー"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group"
+              ]
             }
           ],
-          "description": "事前ビルドコマンド"
+          "nullable": true
         },
         "postbuild": {
-          "anyOf": [
+          "title": "BuildCommand",
+          "description": "事後ビルドコマンド",
+          "oneOf": [
             {
               "type": "string"
             },
@@ -138,54 +245,88 @@
               }
             },
             {
-              "$ref": "#/$defs/BuildGroupRef"
+              "type": "object",
+              "title": "BuildGroupRef",
+              "properties": {
+                "group": {
+                  "type": "string",
+                  "description": "利用する build_group のキー"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group"
+              ]
             }
           ],
-          "description": "事後ビルドコマンド"
+          "nullable": true
         },
         "catalog_dependencies": {
           "type": "array",
+          "description": "カタログからインストールするパッケージのリスト",
           "items": {
-            "anyOf": [
+            "title": "CatalogDependency",
+            "oneOf": [
               {
                 "type": "string"
               },
               {
-                "$ref": "#/$defs/VerboseCatalogDependency"
+                "type": "object",
+                "title": "VerboseCatalogDependency",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "カタログからインストールするパッケージのID"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "id"
+                ]
               }
             ]
           },
-          "description": "カタログからインストールするパッケージのリスト"
+          "nullable": true
         }
       },
+      "additionalProperties": false,
       "required": [
         "aviutl2_version"
-      ]
+      ],
+      "nullable": true
     },
-    "Preview": {
+    "preview": {
       "type": "object",
+      "title": "Preview",
+      "description": "プレビュー用の設定",
       "properties": {
         "aviutl2_version": {
           "type": "string",
-          "description": "AviUtl2 のバージョン（省略時は development.aviutl2_version）"
+          "description": "AviUtl2 のバージョン（省略時は development.aviutl2_version）",
+          "nullable": true
         },
         "install_dir": {
           "type": "string",
-          "description": "AviUtl2 のインストール先"
+          "description": "AviUtl2 のインストール先",
+          "nullable": true
         },
         "profile": {
           "type": "string",
-          "description": "使うプロファイル名（デフォルトは release）"
+          "description": "使うプロファイル名（デフォルトは release）",
+          "nullable": true
         },
         "include": {
           "type": "array",
+          "description": "含める成果物のリスト（省略時は release.include を使用）",
           "items": {
             "type": "string"
           },
-          "description": "含める成果物のリスト（省略時は release.include を使用）"
+          "nullable": true
         },
         "prebuild": {
-          "anyOf": [
+          "title": "BuildCommand",
+          "description": "事前ビルドコマンド",
+          "oneOf": [
             {
               "type": "string"
             },
@@ -196,13 +337,26 @@
               }
             },
             {
-              "$ref": "#/$defs/BuildGroupRef"
+              "type": "object",
+              "title": "BuildGroupRef",
+              "properties": {
+                "group": {
+                  "type": "string",
+                  "description": "利用する build_group のキー"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group"
+              ]
             }
           ],
-          "description": "事前ビルドコマンド"
+          "nullable": true
         },
         "postbuild": {
-          "anyOf": [
+          "title": "BuildCommand",
+          "description": "事後ビルドコマンド",
+          "oneOf": [
             {
               "type": "string"
             },
@@ -213,71 +367,110 @@
               }
             },
             {
-              "$ref": "#/$defs/BuildGroupRef"
+              "type": "object",
+              "title": "BuildGroupRef",
+              "properties": {
+                "group": {
+                  "type": "string",
+                  "description": "利用する build_group のキー"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group"
+              ]
             }
           ],
-          "description": "事後ビルドコマンド"
+          "nullable": true
         },
         "catalog_dependencies": {
           "type": "array",
+          "description": "カタログからインストールするパッケージのリスト",
           "items": {
-            "anyOf": [
+            "title": "CatalogDependency",
+            "oneOf": [
               {
                 "type": "string"
               },
               {
-                "$ref": "#/$defs/VerboseCatalogDependency"
+                "type": "object",
+                "title": "VerboseCatalogDependency",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "カタログからインストールするパッケージのID"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "id"
+                ]
               }
             ]
           },
-          "description": "カタログからインストールするパッケージのリスト"
+          "nullable": true
         }
-      }
+      },
+      "additionalProperties": false,
+      "nullable": true
     },
-    "Release": {
+    "release": {
       "type": "object",
+      "title": "Release",
+      "description": "リリース用の設定",
       "properties": {
         "output_dir": {
           "type": "string",
-          "description": "出力ディレクトリ"
+          "description": "出力ディレクトリ",
+          "nullable": true
         },
         "package_template": {
           "type": "string",
-          "description": "package.txt のテンプレート"
+          "description": "package.txt のテンプレート",
+          "nullable": true
         },
         "package_id": {
           "type": "string",
-          "description": "au2pkgでのID（package.ini の `id` に相当、デフォルトは `{id}`）"
+          "description": "au2pkgでのID（package.ini の `id` に相当、デフォルトは `{id}`）",
+          "nullable": true
         },
         "package_name": {
           "type": "string",
-          "description": "au2pkgでのパッケージ名（package.ini の `name` に相当、デフォルトは `{name}`）"
+          "description": "au2pkgでのパッケージ名（package.ini の `name` に相当、デフォルトは `{name}`）",
+          "nullable": true
         },
         "package_information": {
           "type": "string",
-          "description": "au2pkgでの情報欄（package.ini の `information` に相当、デフォルトは `{name} v{version}`）"
+          "description": "au2pkgでの情報欄（package.ini の `information` に相当、デフォルトは `{name} v{version}`）",
+          "nullable": true
         },
         "uninstall_subfolder_file": {
           "type": "boolean",
-          "description": "アンインストール時に、作成したフォルダ内の別ファイルを削除するかどうか（package.ini の `uninstallSubFolderFile` に相当、デフォルトは false）"
+          "description": "アンインストール時に、作成したフォルダ内の別ファイルを削除するかどうか（package.ini の `uninstallSubFolderFile` に相当、デフォルトは false）",
+          "nullable": true
         },
         "zip_name": {
           "type": "string",
-          "description": "zip の名前（`.au2pkg.zip` は自動付与、デフォルトは `{id}-v{version}.au2pkg.zip`）"
+          "description": "zip の名前（`.au2pkg.zip` は自動付与、デフォルトは `{id}-v{version}.au2pkg.zip`）",
+          "nullable": true
         },
         "profile": {
           "type": "string",
-          "description": "使うプロファイル名（デフォルトは release）"
+          "description": "使うプロファイル名（デフォルトは release）",
+          "nullable": true
         },
         "include": {
           "type": "array",
+          "description": "含める成果物のリスト（省略時はすべて含める）",
           "items": {
             "type": "string"
           },
-          "description": "含める成果物のリスト（省略時はすべて含める）"
+          "nullable": true
         },
         "prebuild": {
-          "anyOf": [
+          "title": "BuildCommand",
+          "description": "事前ビルドコマンド",
+          "oneOf": [
             {
               "type": "string"
             },
@@ -288,13 +481,26 @@
               }
             },
             {
-              "$ref": "#/$defs/BuildGroupRef"
+              "type": "object",
+              "title": "BuildGroupRef",
+              "properties": {
+                "group": {
+                  "type": "string",
+                  "description": "利用する build_group のキー"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group"
+              ]
             }
           ],
-          "description": "事前ビルドコマンド"
+          "nullable": true
         },
         "postbuild": {
-          "anyOf": [
+          "title": "BuildCommand",
+          "description": "事後ビルドコマンド",
+          "oneOf": [
             {
               "type": "string"
             },
@@ -305,15 +511,30 @@
               }
             },
             {
-              "$ref": "#/$defs/BuildGroupRef"
+              "type": "object",
+              "title": "BuildGroupRef",
+              "properties": {
+                "group": {
+                  "type": "string",
+                  "description": "利用する build_group のキー"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group"
+              ]
             }
           ],
-          "description": "事後ビルドコマンド"
+          "nullable": true
         }
-      }
+      },
+      "additionalProperties": false,
+      "nullable": true
     },
-    "Catalog": {
+    "catalog": {
       "type": "object",
+      "title": "Catalog",
+      "description": "AviUtl2 カタログの定義",
       "properties": {
         "id": {
           "type": "string",
@@ -321,21 +542,53 @@
         },
         "description_path": {
           "type": "string",
-          "description": "説明文へのパス"
+          "description": "説明文へのパス",
+          "nullable": true
         },
         "license_path": {
-          "anyOf": [
+          "description": "ライセンスへのパス",
+          "oneOf": [
             {
               "type": "string"
             },
             {
-              "$ref": "#/$defs/CatalogLicensePath"
+              "type": "object",
+              "title": "CatalogLicensePath",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "title": "LicenseType",
+                  "description": "ライセンス種別",
+                  "enum": [
+                    "MIT",
+                    "Apache-2.0",
+                    "BSD-2-Clause",
+                    "BSD-3-Clause",
+                    "CC0-1.0",
+                    "GPL-2.0",
+                    "GPL-3.0",
+                    "Unlicense",
+                    "custom"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "description": "ライセンス本文へのパス"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "path"
+              ]
             }
           ],
-          "description": "ライセンスへのパス"
+          "nullable": true
         },
         "download_repo": {
           "type": "object",
+          "title": "CatalogDownloadRepo",
+          "description": "ダウンロード元のGitHubリポジトリ",
           "properties": {
             "owner": {
               "type": "string"
@@ -344,171 +597,23 @@
               "type": "string"
             }
           },
+          "additionalProperties": false,
           "required": [
             "owner",
             "repo"
           ],
-          "description": "ダウンロード元のGitHubリポジトリ"
+          "nullable": true
         }
       },
+      "additionalProperties": false,
       "required": [
         "id"
-      ]
-    },
-    "Artifact": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "成果物の有効/無効（デフォルトは true）"
-        },
-        "source": {
-          "type": "string",
-          "description": "成果物のパス"
-        },
-        "destination": {
-          "type": "string",
-          "description": "AviUtl2 の data 配下での配置先"
-        },
-        "build": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "$ref": "#/$defs/BuildGroupRef"
-            }
-          ],
-          "description": "ビルドコマンド"
-        },
-        "placement_method": {
-          "$ref": "#/$defs/PlacementMethod",
-          "description": "配置方法（symlink / copy）"
-        },
-        "profiles": {
-          "$ref": "#/$defs/RecordArtifactProfile",
-          "description": "プロファイルごとの設定"
-        }
-      },
-      "required": [
-        "destination"
-      ]
-    },
-    "VerboseCatalogDependency": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "カタログからインストールするパッケージのID"
-        }
-      },
-      "required": [
-        "id"
-      ]
-    },
-    "CatalogLicensePath": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "anyOf": [
-            {
-              "type": "string",
-              "const": "MIT"
-            },
-            {
-              "type": "string",
-              "const": "Apache-2.0"
-            },
-            {
-              "type": "string",
-              "const": "BSD-2-Clause"
-            },
-            {
-              "type": "string",
-              "const": "BSD-3-Clause"
-            },
-            {
-              "type": "string",
-              "const": "CC0-1.0"
-            },
-            {
-              "type": "string",
-              "const": "GPL-2.0"
-            },
-            {
-              "type": "string",
-              "const": "GPL-3.0"
-            },
-            {
-              "type": "string",
-              "const": "Unlicense"
-            },
-            {
-              "type": "string",
-              "const": "custom"
-            }
-          ],
-          "description": "ライセンス種別"
-        },
-        "path": {
-          "type": "string",
-          "description": "ライセンス本文へのパス"
-        }
-      },
-      "required": [
-        "type",
-        "path"
-      ]
-    },
-    "PlacementMethod": {
-      "type": "string",
-      "enum": [
-        "symlink",
-        "copy"
-      ]
-    },
-    "RecordArtifactProfile": {
-      "type": "object",
-      "properties": {},
-      "additionalProperties": {
-        "$ref": "#/$defs/ArtifactProfile"
-      }
-    },
-    "ArtifactProfile": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "成果物の有効/無効（デフォルトは true）"
-        },
-        "source": {
-          "type": "string",
-          "description": "成果物のパス"
-        },
-        "build": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "$ref": "#/$defs/BuildGroupRef"
-            }
-          ],
-          "description": "ビルドコマンド"
-        }
-      }
+      ],
+      "nullable": true
     }
-  }
+  },
+  "additionalProperties": false,
+  "required": [
+    "project"
+  ]
 }

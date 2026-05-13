@@ -1,0 +1,196 @@
+/// プロジェクト設定
+project: Project
+
+/// 成果物の定義
+artifacts: Mapping<String, Artifact>?
+
+/// ビルドコマンドのグループ定義
+build_group: Mapping<String, BuildCommand>?
+
+/// 開発用の設定
+development: Development?
+
+/// プレビュー用の設定
+preview: Preview?
+
+/// リリース用の設定
+release: Release?
+
+/// AviUtl2 カタログの定義
+catalog: Catalog?
+
+class Project {
+  /// プロジェクトID
+  id: String
+
+  /// プロジェクト名
+  name: String
+
+  /// バージョン
+  version: String
+}
+
+class Artifact {
+  /// 成果物の有効/無効（デフォルトは true）
+  enabled: Boolean?
+
+  /// 成果物のパス
+  source: String?
+
+  /// AviUtl2 の data 配下での配置先
+  destination: String
+
+  /// ビルドコマンド
+  build: BuildCommand?
+
+  /// 配置方法（symlink / copy）
+  placement_method: PlacementMethod?
+
+  /// プロファイルごとの設定
+  profiles: Mapping<String, ArtifactProfile>?
+}
+
+class ArtifactProfile {
+  /// 成果物の有効/無効（デフォルトは true）
+  enabled: Boolean?
+
+  /// 成果物のパス
+  source: String?
+
+  /// ビルドコマンド
+  build: BuildCommand?
+}
+
+/// 単一または複数のビルドコマンド
+typealias BuildCommand = String | Listing<String> | BuildGroupRef
+
+class BuildGroupRef {
+  /// 利用する build_group のキー
+  group: String
+}
+
+/// 配置方法（symlink / copy）
+typealias PlacementMethod = "symlink" | "copy"
+
+class Development {
+  /// AviUtl2 のバージョン
+  aviutl2_version: String
+
+  /// AviUtl2 のインストール先
+  install_dir: String?
+
+  /// 使うプロファイル名（デフォルトは debug）
+  profile: String?
+
+  /// 事前ビルドコマンド
+  prebuild: BuildCommand?
+
+  /// 事後ビルドコマンド
+  postbuild: BuildCommand?
+
+  /// カタログからインストールするパッケージのリスト
+  catalog_dependencies: Listing<CatalogDependency>?
+}
+
+class Preview {
+  /// AviUtl2 のバージョン（省略時は development.aviutl2_version）
+  aviutl2_version: String?
+
+  /// AviUtl2 のインストール先
+  install_dir: String?
+
+  /// 使うプロファイル名（デフォルトは release）
+  profile: String?
+
+  /// 含める成果物のリスト（省略時は release.include を使用）
+  include: Listing<String>?
+
+  /// 事前ビルドコマンド
+  prebuild: BuildCommand?
+
+  /// 事後ビルドコマンド
+  postbuild: BuildCommand?
+
+  /// カタログからインストールするパッケージのリスト
+  catalog_dependencies: Listing<CatalogDependency>?
+}
+
+typealias CatalogDependency = String | VerboseCatalogDependency
+
+class VerboseCatalogDependency {
+  /// カタログからインストールするパッケージのID
+  id: String
+}
+
+class Release {
+  /// 出力ディレクトリ
+  output_dir: String?
+
+  /// package.txt のテンプレート
+  package_template: String?
+
+  /// au2pkgでのID（package.ini の `id` に相当、デフォルトは `{id}`）
+  package_id: String?
+
+  /// au2pkgでのパッケージ名（package.ini の `name` に相当、デフォルトは `{name}`）
+  package_name: String?
+
+  /// au2pkgでの情報欄（package.ini の `information` に相当、デフォルトは `{name} v{version}`）
+  package_information: String?
+
+  /// アンインストール時に、作成したフォルダ内の別ファイルを削除するかどうか（package.ini の `uninstallSubFolderFile` に相当、デフォルトは false）
+  uninstall_subfolder_file: Boolean?
+
+  /// zip の名前（`.au2pkg.zip` は自動付与、デフォルトは `{id}-v{version}.au2pkg.zip`）
+  zip_name: String?
+
+  /// 使うプロファイル名（デフォルトは release）
+  profile: String?
+
+  /// 含める成果物のリスト（省略時はすべて含める）
+  include: Listing<String>?
+
+  /// 事前ビルドコマンド
+  prebuild: BuildCommand?
+
+  /// 事後ビルドコマンド
+  postbuild: BuildCommand?
+}
+
+class Catalog {
+  /// ID
+  id: String
+
+  /// 説明文へのパス
+  description_path: String?
+
+  /// ライセンスへのパス
+  license_path: (String | CatalogLicensePath)?
+
+  /// ダウンロード元のGitHubリポジトリ
+  download_repo: CatalogDownloadRepo?
+}
+
+typealias LicenseType =
+  "MIT"
+    | "Apache-2.0"
+    | "BSD-2-Clause"
+    | "BSD-3-Clause"
+    | "CC0-1.0"
+    | "GPL-2.0"
+    | "GPL-3.0"
+    | "Unlicense"
+    | "custom"
+
+class CatalogLicensePath {
+  /// ライセンス種別
+  type: LicenseType
+
+  /// ライセンス本文へのパス
+  path: String
+}
+
+class CatalogDownloadRepo {
+  owner: String
+  repo: String
+}
