@@ -29,9 +29,17 @@ cargo install aviutl2-cli
 ## 設定
 
 以下の設定フォーマットをサポートしています：
-- [`pkl`](https://pkl-lang.org)（`aviutl2.pkl`、`.config/aviutl2.pkl`）
-- TOML（`aviutl2.toml`、`.config/aviutl2.toml`）
-- JSON（`aviutl2.json`、`.config/aviutl2.json`）
+
+- [`pkl`](https://pkl-lang.org)
+- TOML
+- YAML
+- JSON
+
+以下のファイル名でプロジェクトルートに配置できます（優先順位の高い順）：
+
+1. `aviutl2.{pkl,toml,yaml,json}`
+2. `.aviutl2.{pkl,toml,yaml,json}`
+3. `.aviutl2-cli/aviutl2.{pkl,toml,yaml,json}`
 
 > [!NOTE]
 > デフォルトではpklは[pklr](https://github.com/jdx/pklr)を使用して処理されます。
@@ -40,7 +48,7 @@ cargo install aviutl2-cli
 <details>
 <summary>aviutl2.toml の例</summary>
 
-詳細な仕様は[TypeSpec](./typespec/main.tsp)を参照してください。
+詳細な仕様は[AviUtl2CliConfig.pkl](./src/AviUtl2CliConfig.pkl)を参照してください。
 
 ```toml
 [project]
@@ -207,6 +215,7 @@ nr typespec
 ```
 
 生成物:
+
 - `typespec/temporary/aviutl2.config.schema.json`（TypeSpec の出力）
 - `src/schema.json`（CLI が参照する最終的な schema）
 

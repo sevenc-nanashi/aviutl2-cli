@@ -3,6 +3,7 @@ cargo-prebuilt = "https://github.com/sevenc-nanashi/mise-cargo-prebuilt"
 
 [tools]
 "cargo-prebuilt:cargo-edit" = "latest"
-java = "latest"
-node = "24"
-pnpm = "latest"
+pkl = "latest"
+
+[tasks]
+schema = "pkl eval ./src/to_json_schema.pkl -f json -o ./src/schema.json"

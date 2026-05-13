@@ -1,6 +1,6 @@
 {
   "type": "object",
-  "title": "schema",
+  "title": "AviUtl2CliConfig",
   "properties": {
     "project": {
       "type": "object",

@@ -366,10 +366,16 @@ pub fn find_and_cd_to_project() -> Result<PathBuf> {
         ".aviutl2.pkl",
         "aviutl2.toml",
         ".aviutl2.toml",
+        "aviutl2.yaml",
+        "aviutl2.yml",
+        ".aviutl2.yaml",
+        ".aviutl2.yml",
         "aviutl2.json",
         ".aviutl2.json",
         ".config/aviutl2.toml",
         ".config/aviutl2.pkl",
+        ".config/aviutl2.yaml",
+        ".config/aviutl2.yml",
         ".config/aviutl2.json",
     ];
     let mut current =
