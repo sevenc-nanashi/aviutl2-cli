@@ -306,14 +306,6 @@ fn load_config_from_path(path: &std::path::Path) -> Result<serde_json::Value> {
     if path
         .extension()
         .and_then(|s| s.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("toml"))
-    {
-        let content = fs::read_to_string(path)
-            .with_context(|| format!("設定ファイルの読み込みに失敗しました: {}", path.display()))?;
-        toml::from_str(&content).with_context(|| "設定ファイルの解析に失敗しました")
-    } else if path
-        .extension()
-        .and_then(|s| s.to_str())
         .is_some_and(|ext| ext.eq_ignore_ascii_case("pkl"))
     {
         if std::env::var("AU2_USE_PKL_CLI").is_ok() {
@@ -334,9 +326,26 @@ fn load_config_from_path(path: &std::path::Path) -> Result<serde_json::Value> {
                         .with_context(|| "pkl コマンドの出力の解析に失敗しました")
                 })
         } else {
-            pollster::block_on(pklr::eval_to_json(path))
-                .with_context(|| "設定ファイルの解析に失敗しました")
+            pollster::block_on(pklr::eval_to_json(path)).with_context(|| {
+                format!("pkl ファイルの読み込みに失敗しました: {}", path.display())
+            })
         }
+    } else if path
+        .extension()
+        .and_then(|s| s.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("toml"))
+    {
+        let content = fs::read_to_string(path)
+            .with_context(|| format!("設定ファイルの読み込みに失敗しました: {}", path.display()))?;
+        toml::from_str(&content).with_context(|| "設定ファイルの解析に失敗しました")
+    } else if path
+        .extension()
+        .and_then(|s| s.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("yaml") || ext.eq_ignore_ascii_case("yml"))
+    {
+        let content = fs::read_to_string(path)
+            .with_context(|| format!("設定ファイルの読み込みに失敗しました: {}", path.display()))?;
+        serde_saphyr::from_str(&content).with_context(|| "設定ファイルの解析に失敗しました")
     } else {
         let content = fs::read_to_string(path)
             .with_context(|| format!("設定ファイルの読み込みに失敗しました: {}", path.display()))?;
