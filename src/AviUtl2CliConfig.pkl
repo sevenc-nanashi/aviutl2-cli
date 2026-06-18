@@ -62,7 +62,7 @@ class ArtifactProfile {
 }
 
 /// 単一または複数のビルドコマンド
-typealias BuildCommand = String | Listing<String> | BuildGroupRef
+typealias BuildCommand = String | List<String> | BuildGroupRef
 
 class BuildGroupRef {
   /// 利用する build_group のキー
@@ -89,7 +89,7 @@ class Development {
   postbuild: BuildCommand?
 
   /// カタログからインストールするパッケージのリスト
-  catalog_dependencies: Listing<CatalogDependency>?
+  catalog_dependencies: List<CatalogDependency>?
 }
 
 class Preview {
@@ -103,7 +103,7 @@ class Preview {
   profile: String?
 
   /// 含める成果物のリスト（省略時は release.include を使用）
-  include: Listing<String>?
+  include: List<String>?
 
   /// 事前ビルドコマンド
   prebuild: BuildCommand?
@@ -112,7 +112,7 @@ class Preview {
   postbuild: BuildCommand?
 
   /// カタログからインストールするパッケージのリスト
-  catalog_dependencies: Listing<CatalogDependency>?
+  catalog_dependencies: List<CatalogDependency>?
 }
 
 typealias CatalogDependency = String | VerboseCatalogDependency
@@ -148,7 +148,7 @@ class Release {
   profile: String?
 
   /// 含める成果物のリスト（省略時はすべて含める）
-  include: Listing<String>?
+  include: List<String>?
 
   /// 事前ビルドコマンド
   prebuild: BuildCommand?
