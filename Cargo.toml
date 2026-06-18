@@ -23,37 +23,37 @@ path = "src/main.rs"
 
 [dependencies]
 aho-corasick = "1.1.4"
-anyhow = "1.0.100"
-clap = { version = "4.5.56", features = ["derive"] }
+anyhow = "1.0.102"
+clap = { version = "4.6.1", features = ["derive"] }
 colored = "3.1.1"
-configparser = "3.1.0"
+configparser = "3.2.0"
 dedent = "0.1.1"
 dialoguer = "0.12.0"
-fs-err = "3.2.2"
+fs-err = "3.3.0"
 fs_extra = "1.3.0"
 pathdiff = "0.2.3"
-pklr = "0.4.2"
-pollster = "0.4.0"
-regex = "1.12.3"
+pklr = "1.1.0"
+regex = "1.12.4"
 serde = { version = "1.0.228", features = ["derive"] }
 serde-constant = "0.1.0"
-serde-saphyr = "0.0.26"
-serde_json = "1.0.145"
-sevenz-rust2 = "0.20.2"
-strum = { version = "0.27.2", features = ["derive"] }
-tempfile = "3.14.0"
-time = { version = "0.3.44", features = ["formatting"] }
-toml = "0.9.11"
+serde-saphyr = "0.0.27"
+serde_json = "1.0.150"
+sevenz-rust2 = "0.21.0"
+strum = { version = "0.28.0", features = ["derive"] }
+tempfile = "3.27.0"
+time = { version = "0.3.49", features = ["formatting"] }
+tokio = { version = "1.52.3", features = ["rt-multi-thread"] }
+toml = "1.1.2"
 tracing = "0.1.44"
 tracing-log = "0.2.0"
 tracing-subscriber = "0.3.23"
-ureq = { version = "3.1.4", features = ["json"] }
+ureq = { version = "3.3.0", features = ["json"] }
 walkdir = "2.5.0"
 xxhash-rust = { version = "0.8.15", features = ["xxh3"] }
-zip = "7.2.0"
+zip = "8.6.0"
 
 [dev-dependencies]
-assert_cmd = "2.0.16"
-insta = "1.46.3"
-predicates = "3.1.3"
-tempfile = "3.14.0"
+assert_cmd = "2.2.2"
+insta = "1.48.0"
+predicates = "3.1.4"
+tempfile = "3.27.0"

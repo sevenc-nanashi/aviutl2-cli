@@ -326,8 +326,17 @@ fn load_config_from_path(path: &std::path::Path) -> Result<serde_json::Value> {
                         .with_context(|| "pkl コマンドの出力の解析に失敗しました")
                 })
         } else {
-            pollster::block_on(pklr::eval_to_json(path)).with_context(|| {
-                format!("pkl ファイルの読み込みに失敗しました: {}", path.display())
+            static RUNTIME: std::sync::LazyLock<tokio::runtime::Runtime> =
+                std::sync::LazyLock::new(|| {
+                    tokio::runtime::Builder::new_current_thread()
+                        .enable_all()
+                        .build()
+                        .expect("Tokio runtime の構築に失敗しました")
+                });
+            RUNTIME.block_on(async {
+                pklr::eval_to_json(path).await.with_context(|| {
+                    format!("pkl ファイルの読み込みに失敗しました: {}", path.display())
+                })
             })
         }
     } else if path
