@@ -318,7 +318,7 @@ fn build_versions(
 ) -> Result<Vec<catalog_schema::Version>> {
     let files = collect_version_files(stage_dir)?;
     let release_date = time::OffsetDateTime::now_utc()
-        .format(&time::format_description::parse_borrowed::<3>("[year]-[month]-[day]").unwrap())
+        .format(&time::macros::format_description!("[year]-[month]-[day]"))
         .unwrap_or_default();
     Ok(vec![catalog_schema::Version {
         version: config.project.version.clone(),
