@@ -12,7 +12,7 @@ use crate::config::ConfigLoadOpts;
 
 pub fn run(command: Commands, opts: ConfigLoadOpts) -> Result<()> {
     match command {
-        Commands::Init => init::run(),
+        Commands::Init { force, use_pkl } => init::run(force, use_pkl, &opts),
         Commands::Prepare { force, refresh } => {
             schema::run()?;
             prepare::aviutl2(&opts)?;

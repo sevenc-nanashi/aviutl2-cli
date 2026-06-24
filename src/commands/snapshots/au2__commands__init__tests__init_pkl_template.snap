@@ -1,0 +1,47 @@
+---
+source: src/commands/init.rs
+expression: template
+---
+// 設定ファイルについては https://github.com/sevenc-nanashi/aviutl2-cli を参照してください。
+amends "https://raw.githubusercontent.com/sevenc-nanashi/aviutl2-cli/refs/tags/{{VERSION}}/src/AviUtl2CliConfig.pkl"
+
+project {
+  id = "my_plugin"
+  name = "My Plugin"
+  version = "0.1.0"
+}
+
+development {
+  aviutl2_version = "latest"
+}
+
+artifacts {
+  ["English-my_plugin-aul2"] {
+    destination = "Language/English.my_plugin.aul2"
+    source = "./i18n/English.my_plugin.aul2"
+  }
+
+  ["English-aul2"] {
+    enabled = false
+    destination = "Language/English.aul2"
+    source = "https://raw.githubusercontent.com/aviutl2/aviutl2_community_translation/refs/heads/main/locales/original_english.aul2"
+    profiles {
+      ["debug"] {
+        enabled = true
+      }
+    }
+  }
+  ["my_plugin-auf2"] {
+    destination = "Plugin/my_plugin.auf2"
+    profiles {
+      ["debug"] {
+        build = List("cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug", "cmake --build build --config Debug")
+        source = "build/Debug/my_plugin.dll"
+      }
+      ["release"] {
+        build = List("cmake -S . -B build -DCMAKE_BUILD_TYPE=Release", "cmake --build build --config Release")
+        source = "build/Release/my_plugin.dll"
+      }
+    }
+  }
+}

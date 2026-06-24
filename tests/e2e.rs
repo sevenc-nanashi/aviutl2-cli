@@ -61,6 +61,29 @@ fn e2e_init_creates_config_and_updates_gitignore() -> anyhow::Result<()> {
 }
 
 #[test]
+fn e2e_init_pkl_creates_pkl_config() -> anyhow::Result<()> {
+    let temp = tempdir()?;
+    let project_dir = temp.path().join("my_pkl_project");
+    fs::create_dir_all(&project_dir)?;
+
+    Command::new(assert_cmd::cargo::cargo_bin!("au2"))
+        .current_dir(&project_dir)
+        .arg("init")
+        .arg("--pkl")
+        .assert()
+        .success();
+
+    let config_path = project_dir.join("aviutl2.pkl");
+    let config = fs::read_to_string(&config_path)?;
+    assert!(
+        config.contains("amends \"https://raw.githubusercontent.com/sevenc-nanashi/aviutl2-cli")
+    );
+    assert!(config.contains("name = \"my_pkl_project\""));
+
+    Ok(())
+}
+
+#[test]
 fn e2e_init_fails_when_config_exists() -> anyhow::Result<()> {
     let temp = tempdir()?;
     let project_dir = temp.path().join("existing_project");
