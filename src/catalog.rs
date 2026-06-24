@@ -1,7 +1,10 @@
 use anyhow::Context;
 use fs_err as fs;
 
-use crate::{catalog_schema::CatalogIndexEntry, config::CatalogDependency};
+use crate::{
+    catalog_schema::{CatalogIndexEntry, InstallerSource},
+    config::CatalogDependency,
+};
 
 pub fn load_catalog_index(
     refresh: bool,
@@ -39,7 +42,7 @@ fn should_reload_catalog_index(path: &std::path::Path, refresh: bool) -> bool {
         && let Ok(modified) = metadata.modified()
         && let Ok(elapsed) = modified.elapsed()
     {
-        return elapsed.as_secs() < 3600; // 1時間以内に更新されているなら再読み込みしない
+        return elapsed.as_secs() > 3600; // 1時間以上経過している場合は再取得する
     }
     true
 }
@@ -69,33 +72,11 @@ fn fetch_catalog_index() -> anyhow::Result<std::collections::HashMap<String, Cat
 
 #[tracing::instrument(skip_all, fields(id = %entry.id, version = %entry.latest_version))]
 pub fn install(data_root: &std::path::Path, entry: &CatalogIndexEntry) -> anyhow::Result<()> {
-    let installer_source = &entry.installer.source;
-    let download_url = match installer_source {
-        crate::catalog_schema::InstallerSource::Github { github } => {
-            resolve_github_download_url(&github.owner, &github.repo, &github.pattern)?
-        }
-        crate::catalog_schema::InstallerSource::GoogleDrive { google_drive } => {
-            format!(
-                "https://drive.google.com/uc?export=download&id={id}",
-                id = google_drive.id
-            )
-        }
-        crate::catalog_schema::InstallerSource::Direct { direct } => direct.clone(),
-        crate::catalog_schema::InstallerSource::Booth { booth: _ } => {
-            anyhow::bail!("Booth からのインストールはサポートされていません");
-        }
-    };
-
-    tracing::info!("ダウンロード URL: {}", download_url);
-    let mut temp_dir = tempfile::tempdir()?;
-    temp_dir.disable_cleanup(true);
-
     run_catalog_actions(
-        &temp_dir,
         entry,
         data_root,
         &entry.installer.install,
-        Some(&download_url),
+        Some(&entry.installer.source),
     )?;
 
     Ok(())
@@ -170,13 +151,13 @@ pub fn sync(
 }
 
 fn run_catalog_actions(
-    temp_dir: &tempfile::TempDir,
     entry: &CatalogIndexEntry,
     data_root: &std::path::Path,
     actions: &[crate::catalog_schema::InstallerAction],
-    download_url: Option<&str>,
+    install_source: Option<&InstallerSource>,
 ) -> anyhow::Result<()> {
-    let download_path = temp_dir.path().join(format!("{}.tmp", entry.id));
+    let download_path: Option<std::path::PathBuf> = None;
+    let temp_dir = tempfile::tempdir()?;
     let resolve_path = |path: &str| -> std::path::PathBuf {
         path.replace("{tmp}", temp_dir.path().to_str().unwrap_or_default())
             .replace("{dataDir}", data_root.to_str().unwrap_or_default())
@@ -194,8 +175,36 @@ fn run_catalog_actions(
         let _span = tracing::info_span!("install_action", action_index = i).entered();
         match action {
             crate::catalog_schema::InstallerAction::Download {} => {
-                let Some(download_url) = download_url else {
-                    anyhow::bail!("Downloadは使用できません")
+                let (filename, download_url) = match install_source
+                    .ok_or_else(|| anyhow::anyhow!("インストール元が指定されていません"))?
+                {
+                    crate::catalog_schema::InstallerSource::Github { github } => {
+                        let url = resolve_github_download_url(
+                            &github.owner,
+                            &github.repo,
+                            &github.pattern,
+                        )?;
+                        let filename = url
+                            .split('/')
+                            .next_back()
+                            .ok_or_else(|| anyhow::anyhow!("ダウンロード URL が不正です"))?
+                            .to_string();
+                        (Some(filename), url)
+                    }
+                    crate::catalog_schema::InstallerSource::GoogleDrive { google_drive } => (
+                        None,
+                        format!(
+                            "https://drive.google.com/uc?export=download&id={id}",
+                            id = google_drive.id
+                        ),
+                    ),
+                    crate::catalog_schema::InstallerSource::Direct { direct } => {
+                        let filename = direct.split('/').next_back().map(|s| s.to_string());
+                        (filename, direct.clone())
+                    }
+                    crate::catalog_schema::InstallerSource::Booth { booth: _ } => {
+                        anyhow::bail!("Booth からのインストールはサポートされていません");
+                    }
                 };
                 let response = ureq::get(download_url)
                     .call()
@@ -206,7 +215,24 @@ fn run_catalog_actions(
                         response.status()
                     );
                 }
+                let content_disposition = response
+                    .headers()
+                    .get("content-disposition")
+                    .map(|cd| String::from_utf8_lossy(cd.as_bytes()).to_string());
+                let filename = filename
+                    .or_else(|| {
+                        content_disposition.as_ref().and_then(|cd| {
+                            static PATTERN: lazy_regex::Lazy<regex::Regex> =
+                                lazy_regex::lazy_regex!(r#"filename="([^"]+)""#);
+                            PATTERN
+                                .captures(cd)
+                                .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()))
+                        })
+                    })
+                    .unwrap_or_else(|| format!("{}.download", entry.id));
+
                 let mut reader = response.into_body().into_reader();
+                let download_path = temp_dir.path().join(&filename);
                 let mut file = fs::File::create(&download_path)
                     .context("ダウンロードしたファイルの保存に失敗しました")?;
                 std::io::copy(&mut reader, &mut file)
@@ -214,8 +240,12 @@ fn run_catalog_actions(
                 tracing::info!("ファイルを保存しました: {}", download_path.display());
             }
             crate::catalog_schema::InstallerAction::Extract {} => {
-                let file = fs::File::open(&download_path)
-                    .context("ダウンロードしたファイルの読み込みに失敗しました")?;
+                let file = fs::File::open(
+                    download_path
+                        .as_ref()
+                        .context("ダウンロードしたファイルが見つかりません")?,
+                )
+                .context("ダウンロードしたファイルの読み込みに失敗しました")?;
                 let mut archive = zip::ZipArchive::new(file)
                     .context("ダウンロードしたファイルの展開に失敗しました")?;
                 for i in 0..archive.len() {
@@ -231,10 +261,16 @@ fn run_catalog_actions(
                         std::io::copy(&mut file, &mut out_file)?;
                     }
                 }
-                tracing::info!("ファイルを展開しました: {}", download_path.display());
+                tracing::info!(
+                    "ファイルを展開しました: {}",
+                    download_path.as_ref().unwrap().display()
+                );
             }
             crate::catalog_schema::InstallerAction::ExtractSfx {} => {
-                let mut file = fs::File::open(&download_path)
+                let mut file =
+                    fs::File::open(download_path.as_ref().ok_or_else(|| {
+                        anyhow::anyhow!("ダウンロードしたファイルが見つかりません")
+                    })?)
                     .context("ダウンロードしたファイルの読み込みに失敗しました")?;
                 let finder = aho_corasick::AhoCorasick::new([b"\x37\x7A\xBC\xAF\x27\x1C"])?;
                 let found = finder
@@ -437,12 +473,6 @@ fn resolve_github_download_url(owner: &str, repo: &str, pattern: &str) -> anyhow
 
 #[tracing::instrument(skip_all, fields(id = %entry.id, version = %entry.latest_version))]
 pub fn uninstall(data_root: &std::path::Path, entry: &CatalogIndexEntry) -> anyhow::Result<()> {
-    run_catalog_actions(
-        &tempfile::tempdir()?,
-        entry,
-        data_root,
-        &entry.installer.uninstall,
-        None,
-    )?;
+    run_catalog_actions(entry, data_root, &entry.installer.uninstall, None)?;
     Ok(())
 }
