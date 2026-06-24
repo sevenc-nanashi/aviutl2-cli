@@ -3,11 +3,6 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@typespec/compiler": "latest",
-    "@typespec/json-schema": "latest",
     "serve": "^14.2.5"
-  },
-  "scripts": {
-    "typespec": "tsp compile typespec && node ./typespec/modifySchema.ts"
   }
 }

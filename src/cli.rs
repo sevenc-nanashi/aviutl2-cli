@@ -37,8 +37,15 @@ pub enum LogStyle {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// aviutl2.toml を作成します
-    Init,
+    /// 設定ファイルを初期化します
+    Init {
+        /// 既存ファイルがある場合に上書きします
+        #[arg(short, long)]
+        force: bool,
+        /// 設定ファイルに pkl を使用します
+        #[arg(long = "pkl")]
+        use_pkl: bool,
+    },
 
     /// AviUtl2 の開発環境をセットアップします
     /// （prepare:schema -> prepare:aviutl2 -> prepare:artifacts）

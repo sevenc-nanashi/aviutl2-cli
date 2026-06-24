@@ -1,7 +1,14 @@
+[settings]
+lockfile = true
+
 [plugins]
 cargo-prebuilt = "https://github.com/sevenc-nanashi/mise-cargo-prebuilt"
 
 [tools]
 "cargo-prebuilt:cargo-edit" = "latest"
 node = "24"
+pkl = "latest"
 pnpm = "latest"
+
+[tasks]
+schema = "pkl eval ./src/to_json_schema.pkl -f json -o ./src/schema.json"
