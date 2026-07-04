@@ -156,7 +156,7 @@ fn run_catalog_actions(
     actions: &[crate::catalog_schema::InstallerAction],
     install_source: Option<&InstallerSource>,
 ) -> anyhow::Result<()> {
-    let download_path: Option<std::path::PathBuf> = None;
+    let mut downloaded_path: Option<std::path::PathBuf> = None;
     let temp_dir = tempfile::tempdir()?;
     let resolve_path = |path: &str| -> std::path::PathBuf {
         path.replace("{tmp}", temp_dir.path().to_str().unwrap_or_default())
@@ -238,10 +238,11 @@ fn run_catalog_actions(
                 std::io::copy(&mut reader, &mut file)
                     .context("ダウンロードしたファイルの保存に失敗しました")?;
                 tracing::info!("ファイルを保存しました: {}", download_path.display());
+                downloaded_path = Some(download_path);
             }
             crate::catalog_schema::InstallerAction::Extract {} => {
                 let file = fs::File::open(
-                    download_path
+                    downloaded_path
                         .as_ref()
                         .context("ダウンロードしたファイルが見つかりません")?,
                 )
@@ -263,12 +264,12 @@ fn run_catalog_actions(
                 }
                 tracing::info!(
                     "ファイルを展開しました: {}",
-                    download_path.as_ref().unwrap().display()
+                    downloaded_path.as_ref().unwrap().display()
                 );
             }
             crate::catalog_schema::InstallerAction::ExtractSfx {} => {
                 let mut file =
-                    fs::File::open(download_path.as_ref().ok_or_else(|| {
+                    fs::File::open(downloaded_path.as_ref().ok_or_else(|| {
                         anyhow::anyhow!("ダウンロードしたファイルが見つかりません")
                     })?)
                     .context("ダウンロードしたファイルの読み込みに失敗しました")?;
