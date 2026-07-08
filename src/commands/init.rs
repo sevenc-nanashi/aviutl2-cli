@@ -19,7 +19,7 @@ enum ProjectType {
     None,
 }
 
-#[derive(Debug, Clone, Copy, strum::EnumString, strum::Display, strum::EnumIter)]
+#[derive(Debug, Clone, Copy, strum::EnumString, strum::Display, strum::EnumIter, PartialEq, Eq)]
 enum PluginType {
     #[strum(serialize = "入力プラグイン")]
     Input,
@@ -238,15 +238,21 @@ fn init_toml_template(config: &InitConfig) -> String {
         ));
         template.push('\n');
     }
+
     match config.project_type {
         ProjectType::PluginCpp { plugin_type } => {
             let suffix = plugin_type.suffix();
+            let target_dir = if plugin_type == PluginType::ScriptModule {
+                "Script"
+            } else {
+                "Plugin"
+            };
             template.push('\n');
             template.push_str(&format!(
                 dedent::dedent!(
                     r#"
                     [artifacts.{project_filename}-{suffix}]
-                    destination = "Plugin/{project_filename}.{suffix}"
+                    destination = "{target_dir}/{project_filename}.{suffix}"
 
                     [artifacts.{project_filename}-{suffix}.profiles.debug]
                     build = ["cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug", "cmake --build build --config Debug"]
@@ -257,6 +263,7 @@ fn init_toml_template(config: &InitConfig) -> String {
                     source = "build/Release/{project_filename}.dll"
                     "#
                 ),
+                target_dir = target_dir,
                 suffix = suffix,
                 project_filename = project_filename
             ));
@@ -264,12 +271,17 @@ fn init_toml_template(config: &InitConfig) -> String {
         }
         ProjectType::PluginRust { plugin_type } => {
             let suffix = plugin_type.suffix();
+            let target_dir = if plugin_type == PluginType::ScriptModule {
+                "Script"
+            } else {
+                "Plugin"
+            };
             template.push('\n');
             template.push_str(&format!(
                 dedent::dedent!(
                     r#"
                     [artifacts.{project_filename}-{suffix}]
-                    destination = "Plugin/{project_filename}.{suffix}"
+                    destination = "{target_dir}/{project_filename}.{suffix}"
 
                     [artifacts.{project_filename}-{suffix}.profiles.debug]
                     build = "cargo build"
@@ -280,6 +292,7 @@ fn init_toml_template(config: &InitConfig) -> String {
                     source = "target/release/{project_filename}.dll"
                     "#
                 ),
+                target_dir = target_dir,
                 project_filename = project_filename,
                 suffix = suffix
             ));
