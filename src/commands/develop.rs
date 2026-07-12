@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Child, Command};
 use std::thread;
 use std::time::{Duration, SystemTime};
 
@@ -63,12 +63,16 @@ pub fn run(
         let aviutl_exe = data_dir.parent().unwrap_or(&data_dir).join("aviutl2.exe");
         if aviutl_exe.exists() {
             tracing::info!("AviUtl2 を起動します: {}", aviutl_exe.display());
-            Command::new(aviutl_exe)
+            let mut child = Command::new(aviutl_exe)
                 .args(args)
                 .spawn()
                 .with_context(|| "AviUtl2 の起動に失敗しました")?;
             if !detach {
-                follow_latest_log(&data_dir.join("log"), &mut std::io::stdout().lock())?;
+                follow_latest_log(
+                    &data_dir.join("log"),
+                    &mut std::io::stdout().lock(),
+                    &mut child,
+                )?;
             }
         } else {
             tracing::warn!("AviUtl2.exe が見つかりません: {}", aviutl_exe.display());
@@ -173,10 +177,14 @@ fn latest_log_file(log_dir: &Path) -> Result<Option<PathBuf>> {
     Ok(latest.map(|(_, path)| path))
 }
 
-fn follow_latest_log(log_dir: &Path, output: &mut impl Write) -> Result<()> {
+fn follow_latest_log(log_dir: &Path, output: &mut impl Write, child: &mut Child) -> Result<()> {
     let mut tailer = LogTailer::new();
     loop {
         tailer.poll(log_dir, output)?;
+        if child.try_wait()?.is_some() {
+            tailer.poll(log_dir, output)?;
+            return Ok(());
+        }
         thread::sleep(Duration::from_millis(100));
     }
 }
