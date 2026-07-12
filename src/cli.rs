@@ -94,6 +94,10 @@ pub enum Commands {
         #[arg(short = 's', long = "skip-start")]
         skip_start: bool,
 
+        /// AviUtl2のログを監視せずに終了する
+        #[arg(short = 'd', long = "detach")]
+        detach: bool,
+
         /// HTTP の成果物キャッシュを再取得します
         #[arg(short, long)]
         refresh: bool,

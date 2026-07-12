@@ -1,7 +1,12 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, bail, ensure};
+use encoding_rs::{CoderResult, Decoder, SHIFT_JIS};
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::thread;
+use std::time::{Duration, SystemTime};
 
 use crate::config::{BuildCommand, Config, ConfigLoadOpts, PlacementMethod, load_config};
 use crate::util::{copy_to_destination, development_dir, find_aviutl2_data_dir, resolve_source};
@@ -21,6 +26,7 @@ pub struct ResolvedBuild {
 pub fn run(
     profile: Option<String>,
     skip_start: bool,
+    detach: bool,
     refresh: bool,
     args: Vec<String>,
     opts: &ConfigLoadOpts,
@@ -61,11 +67,118 @@ pub fn run(
                 .args(args)
                 .spawn()
                 .with_context(|| "AviUtl2 の起動に失敗しました")?;
+            if !detach {
+                follow_latest_log(&data_dir.join("log"), &mut std::io::stdout().lock())?;
+            }
         } else {
             tracing::warn!("AviUtl2.exe が見つかりません: {}", aviutl_exe.display());
         }
     }
     Ok(())
+}
+
+struct LogTailer {
+    path: Option<PathBuf>,
+    file: Option<File>,
+    position: u64,
+    decoder: Decoder,
+}
+
+impl LogTailer {
+    fn new() -> Self {
+        Self {
+            path: None,
+            file: None,
+            position: 0,
+            decoder: SHIFT_JIS.new_decoder_without_bom_handling(),
+        }
+    }
+
+    fn poll(&mut self, log_dir: &Path, output: &mut impl Write) -> Result<()> {
+        let latest = latest_log_file(log_dir)?;
+        if latest != self.path {
+            self.path = latest.clone();
+            self.file = None;
+            self.position = 0;
+            self.decoder = SHIFT_JIS.new_decoder_without_bom_handling();
+            if let Some(path) = latest {
+                tracing::info!("ログを監視します: {}", path.display());
+                let mut file = File::open(&path).with_context(|| {
+                    format!("ログファイルを開けませんでした: {}", path.display())
+                })?;
+                self.position = file.seek(SeekFrom::End(0))?;
+                self.file = Some(file);
+            }
+            return Ok(());
+        }
+
+        let Some(file) = self.file.as_mut() else {
+            return Ok(());
+        };
+        let length = file.metadata()?.len();
+        if length < self.position {
+            self.position = file.seek(SeekFrom::Start(0))?;
+            self.decoder = SHIFT_JIS.new_decoder_without_bom_handling();
+        }
+        file.seek(SeekFrom::Start(self.position))?;
+        let mut input = Vec::new();
+        file.read_to_end(&mut input)?;
+        if !input.is_empty() {
+            let mut decoded = String::with_capacity(input.len() * 3 + 8);
+            let (result, read, _) = self.decoder.decode_to_string(&input, &mut decoded, false);
+            ensure!(
+                result == CoderResult::InputEmpty,
+                "Shift_JISログの変換バッファが不足しました"
+            );
+            ensure!(
+                read == input.len(),
+                "Shift_JISログを最後まで変換できませんでした"
+            );
+            output.write_all(decoded.as_bytes())?;
+            output.flush()?;
+            self.position += input.len() as u64;
+        }
+        Ok(())
+    }
+}
+
+fn latest_log_file(log_dir: &Path) -> Result<Option<PathBuf>> {
+    if !log_dir.exists() {
+        return Ok(None);
+    }
+    let mut latest: Option<(SystemTime, PathBuf)> = None;
+    for entry in fs_err::read_dir(log_dir).with_context(|| {
+        format!(
+            "ログディレクトリを読み込めませんでした: {}",
+            log_dir.display()
+        )
+    })? {
+        let entry = entry?;
+        let path = entry.path();
+        if !entry.file_type()?.is_file()
+            || !path
+                .extension()
+                .is_some_and(|extension| extension.eq_ignore_ascii_case("log"))
+        {
+            continue;
+        }
+        let modified = entry.metadata()?.modified()?;
+        if latest
+            .as_ref()
+            .is_none_or(|current| (modified, &path) > (current.0, &current.1))
+        {
+            latest = Some((modified, path));
+        }
+    }
+    Ok(latest.map(|(_, path)| path))
+}
+
+fn follow_latest_log(log_dir: &Path, output: &mut impl Write) -> Result<()> {
+    let mut tailer = LogTailer::new();
+    loop {
+        tailer.poll(log_dir, output)?;
+        thread::sleep(Duration::from_millis(100));
+    }
 }
 
 fn warn_if_prepare_snapshot_changed(config: &Config, aviutl2_version: &str) -> Result<()> {
@@ -227,5 +340,107 @@ fn run_shell_command(command: &str) -> Result<std::process::ExitStatus> {
             .args(["-c", command])
             .status()
             .map_err(Into::into)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::OpenOptions;
+
+    #[test]
+    fn log_tailer_skips_existing_content_and_copies_appended_content() -> Result<()> {
+        let temp = tempfile::tempdir()?;
+        let log_dir = temp.path().join("log");
+        fs_err::create_dir_all(&log_dir)?;
+        let log_path = log_dir.join("aviutl2.log");
+        fs_err::write(&log_path, b"existing\n")?;
+
+        let mut tailer = LogTailer::new();
+        let mut output = Vec::new();
+        tailer.poll(&log_dir, &mut output)?;
+        assert!(output.is_empty());
+
+        OpenOptions::new()
+            .append(true)
+            .open(&log_path)?
+            .write_all(b"appended\n")?;
+        tailer.poll(&log_dir, &mut output)?;
+        assert_eq!(output, "appended\n".as_bytes());
+        Ok(())
+    }
+
+    #[test]
+    fn log_tailer_decodes_shift_jis_across_append_boundaries() -> Result<()> {
+        let temp = tempfile::tempdir()?;
+        let log_dir = temp.path().join("log");
+        fs_err::create_dir_all(&log_dir)?;
+        let log_path = log_dir.join("aviutl2.log");
+        fs_err::write(&log_path, b"")?;
+
+        let mut tailer = LogTailer::new();
+        let mut output = Vec::new();
+        tailer.poll(&log_dir, &mut output)?;
+
+        let (encoded, _, had_errors) = SHIFT_JIS.encode("日本語\n");
+        assert!(!had_errors);
+        let split = 1;
+        OpenOptions::new()
+            .append(true)
+            .open(&log_path)?
+            .write_all(&encoded[..split])?;
+        tailer.poll(&log_dir, &mut output)?;
+        assert!(output.is_empty());
+
+        OpenOptions::new()
+            .append(true)
+            .open(&log_path)?
+            .write_all(&encoded[split..])?;
+        tailer.poll(&log_dir, &mut output)?;
+        assert_eq!(output, "日本語\n".as_bytes());
+        Ok(())
+    }
+
+    #[test]
+    fn log_tailer_switches_to_a_newer_log_from_its_end() -> Result<()> {
+        let temp = tempfile::tempdir()?;
+        let log_dir = temp.path().join("log");
+        fs_err::create_dir_all(&log_dir)?;
+        let first_path = log_dir.join("first.log");
+        fs_err::write(&first_path, b"first existing\n")?;
+
+        let mut tailer = LogTailer::new();
+        let mut output = Vec::new();
+        tailer.poll(&log_dir, &mut output)?;
+
+        thread::sleep(Duration::from_millis(20));
+        let second_path = log_dir.join("second.log");
+        fs_err::write(&second_path, b"second existing\n")?;
+        tailer.poll(&log_dir, &mut output)?;
+        assert!(output.is_empty());
+
+        OpenOptions::new()
+            .append(true)
+            .open(&second_path)?
+            .write_all(b"second appended\n")?;
+        tailer.poll(&log_dir, &mut output)?;
+        assert_eq!(output, "second appended\n".as_bytes());
+        Ok(())
+    }
+
+    #[test]
+    fn latest_log_file_ignores_non_log_files() -> Result<()> {
+        let temp = tempfile::tempdir()?;
+        let log_dir = temp.path().join("log");
+        assert_eq!(latest_log_file(&log_dir)?, None);
+
+        fs_err::create_dir_all(&log_dir)?;
+        fs_err::write(log_dir.join("newest.txt"), b"ignored")?;
+        fs_err::write(log_dir.join("aviutl2.LOG"), b"log")?;
+        assert_eq!(
+            latest_log_file(&log_dir)?,
+            Some(log_dir.join("aviutl2.LOG"))
+        );
+        Ok(())
     }
 }

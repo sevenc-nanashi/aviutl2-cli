@@ -344,9 +344,15 @@ fn run_catalog_actions(
                 let path = resolve_path(path);
                 if path.exists() {
                     tracing::info!("ファイルを削除: {}", path.display());
-                    fs::remove_file(&path).with_context(|| {
-                        format!("ファイルの削除に失敗しました: {}", path.display())
-                    })?;
+                    if path.is_dir() {
+                        fs::remove_dir_all(&path).with_context(|| {
+                            format!("ディレクトリの削除に失敗しました: {}", path.display())
+                        })?;
+                    } else {
+                        fs::remove_file(&path).with_context(|| {
+                            format!("ファイルの削除に失敗しました: {}", path.display())
+                        })?;
+                    }
                 } else {
                     tracing::info!("削除するファイルが見つかりませんでした: {}", path.display());
                 }

@@ -31,9 +31,10 @@ pub fn run(command: Commands, opts: ConfigLoadOpts) -> Result<()> {
         Commands::Develop {
             profile,
             skip_start,
+            detach,
             refresh,
             args,
-        } => develop::run(profile, skip_start, refresh, args, &opts),
+        } => develop::run(profile, skip_start, detach, refresh, args, &opts),
         Commands::PrepareSchema => schema::run(),
         Commands::Release {
             profile,
