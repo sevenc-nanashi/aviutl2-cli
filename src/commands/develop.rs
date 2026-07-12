@@ -101,6 +101,7 @@ impl LogTailer {
     fn poll(&mut self, log_dir: &Path, output: &mut impl Write) -> Result<()> {
         let latest = latest_log_file(log_dir)?;
         if latest != self.path {
+            let switched = self.path.is_some();
             self.path = latest.clone();
             self.file = None;
             self.position = 0;
@@ -110,7 +111,11 @@ impl LogTailer {
                 let mut file = File::open(&path).with_context(|| {
                     format!("ログファイルを開けませんでした: {}", path.display())
                 })?;
-                self.position = file.seek(SeekFrom::End(0))?;
+                self.position = if switched {
+                    file.seek(SeekFrom::Start(0))?
+                } else {
+                    file.seek(SeekFrom::End(0))?
+                };
                 self.file = Some(file);
             }
             return Ok(());
@@ -410,7 +415,7 @@ mod tests {
     }
 
     #[test]
-    fn log_tailer_switches_to_a_newer_log_from_its_end() -> Result<()> {
+    fn log_tailer_switches_to_a_newer_log_from_its_start() -> Result<()> {
         let temp = tempfile::tempdir()?;
         let log_dir = temp.path().join("log");
         fs_err::create_dir_all(&log_dir)?;
@@ -432,7 +437,7 @@ mod tests {
             .open(&second_path)?
             .write_all(b"second appended\n")?;
         tailer.poll(&log_dir, &mut output)?;
-        assert_eq!(output, "second appended\n".as_bytes());
+        assert_eq!(output, "second existing\nsecond appended\n".as_bytes());
         Ok(())
     }
 
