@@ -54,6 +54,9 @@ walkdir = "2.5.0"
 xxhash-rust = { version = "0.8.15", features = ["xxh3"] }
 zip = "8.6.0"
 
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp"] }
+
 [dev-dependencies]
 assert_cmd = "2.2.2"
 insta = "1.48.0"

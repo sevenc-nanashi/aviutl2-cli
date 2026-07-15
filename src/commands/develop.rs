@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, bail, ensure};
 use encoding_rs::{CoderResult, Decoder, SHIFT_JIS};
 use std::collections::HashSet;
+use std::ffi::OsString;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
@@ -184,14 +185,141 @@ fn latest_log_file(log_dir: &Path) -> Result<Option<PathBuf>> {
 
 fn follow_latest_log(log_dir: &Path, output: &mut impl Write, child: &mut Child) -> Result<()> {
     let mut tailer = LogTailer::new();
+    let mut process_id = child.id();
+    let mut following_spawned_child = false;
     loop {
         tailer.poll(log_dir, output)?;
-        if child.try_wait()?.is_some() {
-            tailer.poll(log_dir, output)?;
-            return Ok(());
+
+        let process_exited = if following_spawned_child {
+            true
+        } else {
+            child.try_wait()?.is_some()
+        };
+        if process_exited {
+            match inspect_aviutl2_process(process_id)? {
+                AviUtl2ProcessState::Running => {}
+                AviUtl2ProcessState::Exited { child_process_id } => {
+                    tailer.poll(log_dir, output)?;
+                    let Some(child_process_id) = child_process_id else {
+                        return Ok(());
+                    };
+                    tracing::info!(
+                        "子プロセスの AviUtl2 を引き続き監視します (PID: {})",
+                        child_process_id
+                    );
+                    process_id = child_process_id;
+                    following_spawned_child = true;
+                }
+            }
         }
         thread::sleep(Duration::from_millis(100));
     }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum AviUtl2ProcessState {
+    Running,
+    Exited { child_process_id: Option<u32> },
+}
+
+#[derive(Debug)]
+struct ProcessInfo {
+    process_id: u32,
+    parent_process_id: u32,
+    executable: OsString,
+}
+
+fn aviutl2_process_state(processes: &[ProcessInfo], process_id: u32) -> AviUtl2ProcessState {
+    if processes
+        .iter()
+        .any(|process| process.process_id == process_id)
+    {
+        return AviUtl2ProcessState::Running;
+    }
+
+    let child_process_id = processes
+        .iter()
+        .find(|process| {
+            process.parent_process_id == process_id
+                && process
+                    .executable
+                    .to_str()
+                    .is_some_and(|name| name.eq_ignore_ascii_case("aviutl2.exe"))
+        })
+        .map(|process| process.process_id);
+    AviUtl2ProcessState::Exited { child_process_id }
+}
+
+#[cfg(windows)]
+fn inspect_aviutl2_process(process_id: u32) -> Result<AviUtl2ProcessState> {
+    use std::os::windows::ffi::OsStringExt;
+    use windows_sys::Win32::Foundation::{
+        CloseHandle, ERROR_NO_MORE_FILES, HANDLE, INVALID_HANDLE_VALUE,
+    };
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
+        TH32CS_SNAPPROCESS,
+    };
+
+    struct Snapshot(HANDLE);
+
+    impl Drop for Snapshot {
+        fn drop(&mut self) {
+            unsafe {
+                CloseHandle(self.0);
+            }
+        }
+    }
+
+    let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) };
+    if snapshot == INVALID_HANDLE_VALUE {
+        return Err(std::io::Error::last_os_error()).context("プロセス一覧を取得できませんでした");
+    }
+    let snapshot = Snapshot(snapshot);
+    let mut entry = PROCESSENTRY32W {
+        dwSize: std::mem::size_of::<PROCESSENTRY32W>() as u32,
+        ..Default::default()
+    };
+    let mut processes = Vec::new();
+
+    if unsafe { Process32FirstW(snapshot.0, &raw mut entry) } == 0 {
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() == Some(ERROR_NO_MORE_FILES as i32) {
+            return Ok(aviutl2_process_state(&processes, process_id));
+        }
+        return Err(error).context("プロセス一覧を読み取れませんでした");
+    }
+
+    loop {
+        let executable_end = entry
+            .szExeFile
+            .iter()
+            .position(|unit| *unit == 0)
+            .expect("PROCESSENTRY32W.szExeFile must be NUL-terminated");
+        processes.push(ProcessInfo {
+            process_id: entry.th32ProcessID,
+            parent_process_id: entry.th32ParentProcessID,
+            executable: OsString::from_wide(&entry.szExeFile[..executable_end]),
+        });
+
+        if unsafe { Process32NextW(snapshot.0, &raw mut entry) } != 0 {
+            continue;
+        }
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() == Some(ERROR_NO_MORE_FILES as i32) {
+            break;
+        }
+        return Err(error).context("プロセス一覧を読み取れませんでした");
+    }
+
+    Ok(aviutl2_process_state(&processes, process_id))
+}
+
+#[cfg(not(windows))]
+fn inspect_aviutl2_process(_process_id: u32) -> Result<AviUtl2ProcessState> {
+    Ok(AviUtl2ProcessState::Exited {
+        child_process_id: None,
+    })
 }
 
 fn warn_if_prepare_snapshot_changed(config: &Config, aviutl2_version: &str) -> Result<()> {
@@ -453,6 +581,58 @@ mod tests {
         assert_eq!(
             latest_log_file(&log_dir)?,
             Some(log_dir.join("aviutl2.LOG"))
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn process_state_follows_direct_aviutl2_child_after_parent_exits() {
+        let processes = vec![
+            ProcessInfo {
+                process_id: 20,
+                parent_process_id: 10,
+                executable: "helper.exe".into(),
+            },
+            ProcessInfo {
+                process_id: 30,
+                parent_process_id: 10,
+                executable: "AviUtl2.EXE".into(),
+            },
+            ProcessInfo {
+                process_id: 40,
+                parent_process_id: 20,
+                executable: "aviutl2.exe".into(),
+            },
+        ];
+
+        assert_eq!(
+            aviutl2_process_state(&processes, 10),
+            AviUtl2ProcessState::Exited {
+                child_process_id: Some(30)
+            }
+        );
+    }
+
+    #[test]
+    fn process_state_keeps_following_running_process() {
+        let processes = vec![ProcessInfo {
+            process_id: 10,
+            parent_process_id: 1,
+            executable: "aviutl2.exe".into(),
+        }];
+
+        assert_eq!(
+            aviutl2_process_state(&processes, 10),
+            AviUtl2ProcessState::Running
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn inspect_process_finds_current_process() -> Result<()> {
+        assert_eq!(
+            inspect_aviutl2_process(std::process::id())?,
+            AviUtl2ProcessState::Running
         );
         Ok(())
     }
