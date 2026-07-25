@@ -39,7 +39,12 @@ pub fn run(
     let catalog = crate::catalog::load_catalog_index(refresh)?;
 
     tracing::info!("プレビュー用に成果物を配置しました");
-    crate::catalog::sync(&data_dir, &catalog, &config.preview.catalog_dependencies)?;
+    crate::catalog::sync(
+        &data_dir,
+        &catalog,
+        &config.preview.catalog_dependencies,
+        refresh,
+    )?;
 
     super::develop::run_optional_commands(Some(&config.preview.postbuild), &config.build_group)?;
 

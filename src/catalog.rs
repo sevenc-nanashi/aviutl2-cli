@@ -86,6 +86,7 @@ pub fn sync(
     data_root: &std::path::Path,
     catalog: &std::collections::HashMap<String, CatalogIndexEntry>,
     dependencies: &[CatalogDependency],
+    force_reinstall: bool,
 ) -> anyhow::Result<()> {
     let store_path = data_root.join("au2cli_catalog_store.json");
     let store = fs::read_to_string(&store_path)
@@ -125,6 +126,11 @@ pub fn sync(
                 uninstall(data_root, old_version)?;
                 install(data_root, new_version)?;
             }
+            (Some(old_version), Some(_new_version)) if force_reinstall => {
+                tracing::info!("強制再インストール: {} {}", key, old_version.latest_version);
+                uninstall(data_root, old_version)?;
+                install(data_root, old_version)?;
+            }
             (Some(old_version), Some(_new_version)) => {
                 tracing::info!("インストール済です: {} {}", key, old_version.latest_version);
             }
@@ -156,20 +162,39 @@ fn run_catalog_actions(
     actions: &[crate::catalog_schema::InstallerAction],
     install_source: Option<&InstallerSource>,
 ) -> anyhow::Result<()> {
-    let mut downloaded_path: Option<std::path::PathBuf> = None;
+    let downloaded_path: std::sync::Arc<std::sync::OnceLock<std::path::PathBuf>> =
+        std::sync::Arc::new(std::sync::OnceLock::new());
     let temp_dir = tempfile::tempdir()?;
-    let resolve_path = |path: &str| -> std::path::PathBuf {
+    let resolve_placeholders = |path: &str| -> String {
         path.replace("{tmp}", temp_dir.path().to_str().unwrap_or_default())
-            .replace("{dataDir}", data_root.to_str().unwrap_or_default())
+            .replace(
+                "{dataDir}",
+                dunce::canonicalize(data_root)
+                    .unwrap_or_else(|_| data_root.to_path_buf())
+                    .to_str()
+                    .unwrap_or_default(),
+            )
             .replace(
                 "{pluginsDir}",
-                data_root.join("Plugin").to_str().unwrap_or_default(),
+                dunce::canonicalize(data_root.join("Plugin"))
+                    .unwrap_or_else(|_| data_root.join("Plugin"))
+                    .to_str()
+                    .unwrap_or_default(),
             )
             .replace(
                 "{scriptsDir}",
-                data_root.join("Script").to_str().unwrap_or_default(),
+                dunce::canonicalize(data_root.join("Script"))
+                    .unwrap_or_else(|_| data_root.join("Script"))
+                    .to_str()
+                    .unwrap_or_default(),
             )
-            .into()
+            .replace(
+                "{download}",
+                downloaded_path
+                    .get()
+                    .map(|p| p.to_str().unwrap_or_default())
+                    .unwrap_or_default(),
+            )
     };
     for (i, action) in actions.iter().enumerate() {
         let _span = tracing::info_span!("install_action", action_index = i).entered();
@@ -238,14 +263,14 @@ fn run_catalog_actions(
                 std::io::copy(&mut reader, &mut file)
                     .context("ダウンロードしたファイルの保存に失敗しました")?;
                 tracing::info!("ファイルを保存しました: {}", download_path.display());
-                downloaded_path = Some(download_path);
+                downloaded_path
+                    .set(download_path)
+                    .map_err(|_| anyhow::anyhow!("複数のファイルはダウンロードできません"))?;
             }
             crate::catalog_schema::InstallerAction::Extract {} => {
-                let file = fs::File::open(
-                    downloaded_path
-                        .as_ref()
-                        .context("ダウンロードしたファイルが見つかりません")?,
-                )
+                let file = fs::File::open(downloaded_path.get().ok_or_else(|| {
+                    anyhow::anyhow!("ダウンロードが完了していない状態で展開しようとしました")
+                })?)
                 .context("ダウンロードしたファイルの読み込みに失敗しました")?;
                 let mut archive = zip::ZipArchive::new(file)
                     .context("ダウンロードしたファイルの展開に失敗しました")?;
@@ -262,17 +287,13 @@ fn run_catalog_actions(
                         std::io::copy(&mut file, &mut out_file)?;
                     }
                 }
-                tracing::info!(
-                    "ファイルを展開しました: {}",
-                    downloaded_path.as_ref().unwrap().display()
-                );
+                tracing::info!("ファイルを展開しました: {}", temp_dir.path().display());
             }
             crate::catalog_schema::InstallerAction::ExtractSfx {} => {
-                let mut file =
-                    fs::File::open(downloaded_path.as_ref().ok_or_else(|| {
-                        anyhow::anyhow!("ダウンロードしたファイルが見つかりません")
-                    })?)
-                    .context("ダウンロードしたファイルの読み込みに失敗しました")?;
+                let mut file = fs::File::open(downloaded_path.get().ok_or_else(|| {
+                    anyhow::anyhow!("ダウンロードが完了していない状態で展開しようとしました")
+                })?)
+                .context("ダウンロードしたファイルの読み込みに失敗しました")?;
                 let finder = aho_corasick::AhoCorasick::new([b"\x37\x7A\xBC\xAF\x27\x1C"])?;
                 let found = finder
                     .stream_find_iter(&mut file)
@@ -314,8 +335,8 @@ fn run_catalog_actions(
                 )?;
             }
             crate::catalog_schema::InstallerAction::Copy { from, to } => {
-                let from_path = resolve_path(from);
-                let to_dir_path = resolve_path(to);
+                let from_path: std::path::PathBuf = resolve_placeholders(from).into();
+                let to_dir_path: std::path::PathBuf = resolve_placeholders(to).into();
                 let to_path = to_dir_path.join(
                     from_path
                         .file_name()
@@ -341,7 +362,7 @@ fn run_catalog_actions(
                 })?;
             }
             crate::catalog_schema::InstallerAction::Delete { path } => {
-                let path = resolve_path(path);
+                let path: std::path::PathBuf = resolve_placeholders(path).into();
                 if path.exists() {
                     tracing::info!("ファイルを削除: {}", path.display());
                     if path.is_dir() {
@@ -365,7 +386,11 @@ fn run_catalog_actions(
                 if elevate.unwrap_or(false) {
                     anyhow::bail!("管理者権限での実行はサポートされていません");
                 }
-                let path = resolve_path(path);
+                let path: std::path::PathBuf = resolve_placeholders(path).into();
+                let args = args
+                    .iter()
+                    .map(|arg| resolve_placeholders(arg))
+                    .collect::<Vec<_>>();
                 tracing::info!("コマンドを実行: {} {}", path.display(), args.join(" "));
                 std::process::Command::new(path)
                     .args(args)
@@ -446,24 +471,47 @@ impl<R: std::io::Read + std::io::Seek> std::io::Seek for OffsetReader<R> {
 }
 
 fn resolve_github_download_url(owner: &str, repo: &str, pattern: &str) -> anyhow::Result<String> {
-    #[derive(Debug, serde::Deserialize)]
+    #[derive(Debug, Clone, serde::Deserialize)]
     struct MinimumGithubRelease {
         assets: Vec<MinimumGithubAsset>,
     }
-    #[derive(Debug, serde::Deserialize)]
+    #[derive(Debug, Clone, serde::Deserialize)]
     struct MinimumGithubAsset {
         name: String,
         browser_download_url: String,
     }
-    let release: MinimumGithubRelease = ureq::get(&format!(
+    let release = match ureq::get(&format!(
         "https://api.github.com/repos/{owner}/{repo}/releases/latest",
         owner = owner,
         repo = repo
     ))
     .call()
-    .context("GitHub API からリリース情報の取得に失敗しました")?
-    .into_body()
-    .read_json()?;
+    {
+        Ok(response) => response
+            .into_body()
+            .read_json::<MinimumGithubRelease>()
+            .context("GitHub のリリース情報の解析に失敗しました")?,
+        Err(ureq::Error::StatusCode(404)) => {
+            let releases = ureq::get(&format!(
+                "https://api.github.com/repos/{owner}/{repo}/releases",
+                owner = owner,
+                repo = repo
+            ))
+            .call()
+            .context("GitHub のリリース情報の取得に失敗しました")?
+            .into_body()
+            .read_json::<Vec<MinimumGithubRelease>>()
+            .context("GitHub のリリース情報の解析に失敗しました")?;
+            if let Some(release) = releases.first() {
+                release.clone()
+            } else {
+                anyhow::bail!("GitHub のリリース情報が見つかりませんでした: {owner}/{repo}");
+            }
+        }
+        Err(e) => {
+            return Err(e).context("GitHub のリリース情報の取得に失敗しました");
+        }
+    };
     let pattern =
         regex::Regex::new(pattern).context("GitHub のリリースアセットのパターンが不正です")?;
     for asset in release.assets {

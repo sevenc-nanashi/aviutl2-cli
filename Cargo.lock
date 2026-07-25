@@ -164,6 +164,7 @@ dependencies = [
  "configparser",
  "dedent",
  "dialoguer",
+ "dunce",
  "encoding_rs",
  "fs-err",
  "fs_extra",
