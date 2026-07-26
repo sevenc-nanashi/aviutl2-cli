@@ -134,4 +134,15 @@ pub enum Commands {
         /// AviUtl2に渡す追加のコマンドライン引数
         args: Vec<String>,
     },
+
+    /// 開発環境の設定をリセットします
+    Reset {
+        /// カスタムオブジェクト・エフェクト関連をリセットするかどうか。
+        #[arg(short, long, default_value_t = true)]
+        effects: bool,
+
+        /// 移動方法関連をリセットするかどうか。
+        #[arg(short, long, default_value_t = true)]
+        movements: bool,
+    },
 }

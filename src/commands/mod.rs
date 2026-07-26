@@ -3,6 +3,7 @@ mod init;
 mod prepare;
 mod preview;
 mod release;
+mod reset;
 mod schema;
 
 use anyhow::Result;
@@ -46,5 +47,6 @@ pub fn run(command: Commands, opts: ConfigLoadOpts) -> Result<()> {
             refresh,
             args,
         } => preview::run(profile, skip_start, refresh, args, &opts),
+        Commands::Reset { effects, movements } => reset::run(&opts, effects, movements),
     }
 }
