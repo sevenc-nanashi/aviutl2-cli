@@ -215,16 +215,11 @@ AviUtl2の設定の一部をリセットします。
 
 ## TypeSpec
 
-設定ファイルの JSON Schema は TypeSpec から生成しています。
+設定ファイルの JSON Schema は pkl から生成しています。
 
 ```sh
-nr typespec
+mise run schema
 ```
-
-生成物:
-
-- `typespec/temporary/aviutl2.config.schema.json`（TypeSpec の出力）
-- `src/schema.json`（CLI が参照する最終的な schema）
 
 ## ライセンス
 
