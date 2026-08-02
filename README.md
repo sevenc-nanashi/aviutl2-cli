@@ -39,7 +39,7 @@ cargo install aviutl2-cli
 
 1. `aviutl2.{pkl,toml,yaml,json}`
 2. `.aviutl2.{pkl,toml,yaml,json}`
-3. `.aviutl2-cli/aviutl2.{pkl,toml,yaml,json}`
+3. `.config/aviutl2.{pkl,toml,yaml,json}`
 
 > [!NOTE]
 > デフォルトではpklは[pklr](https://github.com/jdx/pklr)を使用して処理されます。
