@@ -40,7 +40,7 @@ pub fn aviutl2_in(install_dir: &std::path::Path, aviutl2_version: &str) -> Resul
     let zip_path = download_aviutl2_zip(&aviutl2_version)?;
     extract_zip(&zip_path, install_dir)?;
     fs::remove_file(&zip_path).ok();
-    tracing::info!("AviUtl2 を展開しました: {}", install_dir.display());
+    tracing::info!("AviUtl2 {} を展開しました: {}", &aviutl2_version, install_dir.display());
     let mut version = File::create(install_dir.join(".aviutl2-version"))?;
     version.write_all(aviutl2_version.as_bytes())?;
     Ok(())
