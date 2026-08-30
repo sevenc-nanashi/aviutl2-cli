@@ -1,6 +1,3 @@
-[settings]
-lockfile = true
-
 [plugins]
 cargo-prebuilt = "https://github.com/sevenc-nanashi/mise-cargo-prebuilt"
 
