@@ -54,6 +54,8 @@ fn init_config(install_dir: &std::path::Path) -> Result<()> {
         [Logger]
         ViewLogLevel=1
         FileLogLevel=1
+        [Edit]
+        EditResume=1
         "#
     );
     let data_dir = install_dir.join("data");
